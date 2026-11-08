@@ -131,7 +131,7 @@ input[type=range] { width: 100%; accent-color: var(--ink); height: 28px; cursor:
 .climb h3 { font-size: var(--t-22); font-weight: 750; font-stretch: 72%; margin: 0; line-height: 1.15; }
 .climb h3 span { font-size: var(--t-15); font-weight: 400; font-stretch: 100%; color: var(--ink-2); margin-left: var(--s-8); }
 .climb svg { display: block; width: 100%; height: auto; overflow: visible; margin-top: var(--s-12); }
-.save { display: flex; align-items: center; gap: var(--s-12); margin-top: var(--s-16); }
+.save { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-12); margin-top: var(--s-16); }
 .save button { border: 1px solid var(--ink); background: var(--ink); color: var(--bg); border-radius: var(--radius); padding: 8px 14px; font-weight: 600; cursor: pointer; }
 .save button:hover { background: transparent; color: var(--ink); }
 .save button.ghost { background: transparent; color: var(--ink); }
@@ -225,7 +225,7 @@ footer button { border: 0; background: none; padding: 0; text-decoration: underl
       <input type="range" id="scrub" min="0" max="3600" step="1" value="0" aria-label="Tiempo de carrera">
     </div>
     <div class="lanes" id="lanes"></div>
-    <div class="save"><button id="save-img">Guardar como imagen</button><button id="copy-link" class="ghost">Copiar enlace</button><span id="save-msg" aria-live="polite"></span></div>
+    <div class="save"><button id="save-img">Guardar como imagen</button><button id="share-ig" class="ghost">Historia de Instagram</button><button id="copy-link" class="ghost">Copiar enlace</button><span id="save-msg" aria-live="polite"></span></div>
   </section>
 
   <section aria-labelledby="h-climb" id="climb-sec">
@@ -730,6 +730,64 @@ async function saveImage() {
   btn.disabled = false; setTimeout(() => msg.textContent = "", 5000);
 }
 $("save-img").onclick = saveImage;
+
+// ---------- historia de Instagram (1080x1920) ----------
+// Lo importante queda entre y=250 e y=1670: arriba y abajo Instagram pone sus controles.
+async function storyBlob() {
+  await Promise.all(["800 40px Archivo", "600 20px Archivo", "400 20px Archivo"].map(f => document.fonts.load(f)));
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const K = { bg: css("--bg"), ink: css("--ink"), ink2: css("--ink-2"), ink3: css("--ink-3"), rule: css("--rule"), asphalt: css("--asphalt"), paint: css("--paint") };
+  const W = 1080, H = 1920, P = 72, ref = refRunner(), cv = document.createElement("canvas"); cv.width = W; cv.height = H;
+  const g = cv.getContext("2d");
+  const font = (w, px, cond) => { g.font = `${w} ${px}px Archivo, system-ui, sans-serif`; if ("fontStretch" in g) g.fontStretch = cond ? "condensed" : "normal"; };
+  const text = (t, x, y, color, align = "left") => { g.fillStyle = color; g.textAlign = align; g.fillText(t, x, y); };
+  const fit = (t, max) => { if (g.measureText(t).width <= max) return t; while (t.length > 1 && g.measureText(t + "…").width > max) t = t.slice(0, -1); return t.trimEnd() + "…"; };
+  const wrap = (t, max, n) => { const out = [""]; for (const w of t.split(" ")) { const c = (out[out.length - 1] + " " + w).trim(); if (g.measureText(c).width > max && out[out.length - 1]) out.push(w); else out[out.length - 1] = c; } return out.slice(0, n); };
+  g.fillStyle = K.bg; g.fillRect(0, 0, W, H); g.textBaseline = "alphabetic";
+  let y = 330;
+  font(800, 104, true); text("Behobia –", P, y, K.ink); y += 96; text("San Sebastián 2026", P, y, K.ink);
+  y += 16; font(400, 34); wrap(roadCaption(ref), W - 2 * P, 3).forEach(l => { y += 48; text(l, P, y, K.ink2); });
+  // perfil con los corredores
+  const X = k => P + k / 20 * (W - 2 * P), pTop = y + 90, pBase = y + 330, EY = e => pBase - e / 90 * (pBase - pTop);
+  g.fillStyle = K.asphalt; g.beginPath(); g.moveTo(X(0), pBase); for (let k = 0; k <= 200; k++) g.lineTo(X(k / 10), EY(PROFILE[k])); g.lineTo(X(20), pBase); g.closePath(); g.fill();
+  g.strokeStyle = K.paint; g.globalAlpha = .6; g.lineWidth = 3; [5, 10, 15].forEach(k => { g.beginPath(); g.moveTo(X(k), EY(elevAt(k))); g.lineTo(X(k), pBase); g.stroke(); }); g.globalAlpha = 1;
+  font(650, 26); ALTOS.forEach(a => text(a.n, X(a.km), EY(elevAt(a.km)) - 26, K.ink, "center"));
+  [...sel].sort((a, b) => b.slot - a.slot).forEach(r => { const km = kmAt(r.i, T); if (km == null) return; g.fillStyle = css(`--r${r.slot + 1}`); g.strokeStyle = K.bg; g.lineWidth = 4; g.beginPath(); g.arc(X(km), EY(elevAt(km)), 16, 0, Math.PI * 2); g.fill(); g.stroke(); });
+  font(500, 26); text("Behobia", X(0), pBase + 40, K.ink2); text("Donostia", X(20), pBase + 40, K.ink2, "right");
+  ["km 5", "km 10", "km 15"].forEach((l, k) => text(l, X(5 * (k + 1)), pBase + 40, K.ink3, "center"));
+  // corredores
+  y = pBase + 110; const bottom = 1600, rowH = Math.min(190, (bottom - y) / Math.max(1, sel.length)), roomy = rowH >= 150;
+  for (const r of sel) {
+    const i = r.i, c = css(`--r${r.slot + 1}`);
+    g.fillStyle = K.rule; g.fillRect(P, y - 46, W - 2 * P, 2);
+    g.fillStyle = c; g.fillRect(P, y - 26, 26, 26);
+    font(700, 52, true); const tt = valid(i) ? hms(C.t[i]) : "sin tiempo"; text(tt, W - P, y, K.ink, "right"); const tw = g.measureText(tt).width;
+    font(650, 38); text(fit(title(C.n[i]), W - 2 * P - 44 - tw - 24), P + 44, y, K.ink);
+    const st = CLIMBS.map((cl, ci) => climbStats(i, ci));
+    const l2 = valid(i) ? `Puesto ${n0(rankAll[i])} · ${ms(C.t[i] / KM)} min/km${roomy ? "" : st[0] ? ` · Miracruz ${st[1].d >= 0 ? "+" : "−"}${Math.round(Math.abs(st[1].d))} s/km` : ""}` : "Sin tiempo válido";
+    font(400, 28); text(fit(l2, W - 2 * P - 44), P + 44, y + 42, K.ink2);
+    if (roomy && st[0]) text(fit(CLIMBS.map((cl, ci) => `${cl.n} ${st[ci].d >= 0 ? "+" : "−"}${Math.round(Math.abs(st[ci].d))} s/km`).join(" · "), W - 2 * P - 44), P + 44, y + 82, K.ink2);
+    y += rowH;
+  }
+  const fy = Math.min(1650, y + 10); g.fillStyle = K.rule; g.fillRect(P, fy - 66, W - 2 * P, 2);
+  font(500, 28); text("davidgargonza.github.io/behobia-dashboard", P, fy, K.ink);
+  font(400, 22); text("Tiempo neto · clasificación provisional del 8 de noviembre de 2026", P, fy + 36, K.ink3);
+  return new Promise(res => cv.toBlob(res, "image/png"));
+}
+$("share-ig").onclick = async () => {
+  const btn = $("share-ig"), msg = $("save-msg"); btn.disabled = true; msg.textContent = "Preparando la historia…";
+  try {
+    const blob = await storyBlob(), file = new File([blob], `behobia-2026-historia-${sel.map(r => C.d[r.i]).join("-")}.png`, { type: "image/png" });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try { await navigator.share({ files: [file] }); msg.textContent = ""; btn.disabled = false; return; }
+      catch (e) { if (e.name === "AbortError") { msg.textContent = ""; btn.disabled = false; return; } }
+    }
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = file.name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+    msg.textContent = "Imagen guardada. Ábrela desde Instagram como historia.";
+  } catch (e) { console.error(e); msg.textContent = "No se ha podido generar la historia."; }
+  btn.disabled = false; setTimeout(() => msg.textContent = "", 6000);
+};
 // el enlace lleva los dorsales: quien lo abre ve la misma comparación
 $("copy-link").onclick = async () => {
   const msg = $("save-msg"), url = location.protocol === "file:" ? "https://davidgargonza.github.io/behobia-dashboard/" + location.hash : location.href;
