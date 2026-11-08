@@ -3,8 +3,8 @@
 **Ver el dashboard:** https://raw.githack.com/davidgargonza/behobia-dashboard/main/index.html
 
 `index.html` es un único archivo autocontenido (datos incluidos, sin dependencias externas).
-Filtros por nombre/dorsal, sexo, categoría y procedencia; distribución de tiempos, edad, procedencia, splits y hora de salida.
-El enlace admite parámetros para compartir, p. ej. `index.html#dorsal=1234`.
+Busca por nombre o dorsal y compara hasta 6 corredores: resumen, ritmo por tramo, posición en carrera, diferencia acumulada y su lugar en la distribución de tiempos.
+El enlace admite parámetros para compartir, p. ej. `index.html#d=2,463,9200` (dorsales separados por comas).
 
 Datos: clasificación **provisional** en directo de clasificacion.behobia-sansebastian.com (8/11/2026).
 
