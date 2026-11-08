@@ -225,7 +225,7 @@ footer button { border: 0; background: none; padding: 0; text-decoration: underl
       <input type="range" id="scrub" min="0" max="3600" step="1" value="0" aria-label="Tiempo de carrera">
     </div>
     <div class="lanes" id="lanes"></div>
-    <div class="save"><button id="save-img">Guardar como imagen</button><button id="share-ig" class="ghost">Historia de Instagram</button><button id="copy-link" class="ghost">Copiar enlace</button><span id="save-msg" aria-live="polite"></span></div>
+    <div class="save"><button id="share-ig">Exportar imagen</button><button id="copy-link" class="ghost">Copiar enlace</button><span id="save-msg" aria-live="polite"></span></div>
   </section>
 
   <section aria-labelledby="h-climb" id="climb-sec">
@@ -446,7 +446,7 @@ function drawProfile(svg, W, x, H, narrow, ref) {
 function renderRoad() {
   const lanes = $("lanes"), ref = refRunner(), scrub = $("scrub"), marks = $("marks");
   const empty = !sel.length;
-  $("winners").hidden = !empty; $("clock").hidden = empty; $("scrub-row").hidden = empty || !ref; $("save-img").parentNode.hidden = empty;
+  $("winners").hidden = !empty; $("clock").hidden = empty; $("scrub-row").hidden = empty || !ref; $("share-ig").parentNode.hidden = empty;
   if (empty) {
     $("road-lead").textContent = "Añade corredores con el buscador y aparecerán sobre el perfil del recorrido, cada uno en el punto donde iba. Si no sabes por dónde empezar, prueba con quienes ganaron.";
     lanes.innerHTML = ""; const axisHost = document.createElement("div"); axisHost.className = "road-axis";
@@ -645,93 +645,7 @@ $("add-winners").innerHTML = `Añadir a quienes ganaron<small>${WIN.map(i => `${
 $("add-winners").onclick = () => { WIN.forEach(i => { if (!sel.some(r => r.i === i) && sel.length < MAX) { const used = new Set(sel.map(r => r.slot)); let slot = 0; while (used.has(slot)) slot++; sel.push({ i, slot }); } }); render(true); };
 // ---------- guardar como imagen (para mandarla por WhatsApp) ----------
 
-async function saveImage() {
-  const btn = $("save-img"), msg = $("save-msg");
-  btn.disabled = true; msg.textContent = "Preparando la imagen…";
-  try {
-    await Promise.all(["800 40px Archivo", "600 20px Archivo", "400 20px Archivo"].map(f => document.fonts.load(f)));
-    const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
-    const K = { bg: css("--bg"), ink: css("--ink"), ink2: css("--ink-2"), ink3: css("--ink-3"), rule: css("--rule"), asphalt: css("--asphalt"), paint: css("--paint") };
-    const runColor = r => css(`--r${r.slot + 1}`);
-    const W = 1080, P = 56, laneH = 128, tblRow = 46, ref = refRunner();
-    const H = P + 150 + 40 + 240 + sel.length * laneH + 40 + 50 + sel.length * tblRow + 140;
-    const cv = document.createElement("canvas"), S = 2; cv.width = W * S; cv.height = H * S;
-    const g = cv.getContext("2d"); g.scale(S, S);
-    const font = (w, px, cond) => { g.font = `${w} ${px}px Archivo, system-ui, sans-serif`; if ("fontStretch" in g) g.fontStretch = cond ? "condensed" : "normal"; };
-    const text = (t, x, y, color, align = "left") => { g.fillStyle = color; g.textAlign = align; g.fillText(t, x, y); };
-    const fit = (t, max) => { if (g.measureText(t).width <= max) return t; while (t.length > 1 && g.measureText(t + "…").width > max) t = t.slice(0, -1); return t.trimEnd() + "…"; };
-    g.fillStyle = K.bg; g.fillRect(0, 0, W, H); g.textBaseline = "alphabetic";
-    let y = P + 50;
-    font(800, 58, true); text("Behobia – San Sebastián 2026", P, y, K.ink);
-    font(400, 24); const words = roadCaption(ref).split(" "), lines = [""];
-    for (const w of words) { const t = (lines[lines.length - 1] + " " + w).trim(); if (g.measureText(t).width > W - 2 * P && lines[lines.length - 1]) lines.push(w); else lines[lines.length - 1] = t; }
-    lines.slice(0, 2).forEach((l, k) => { y += k ? 32 : 44; text(l, P, y, K.ink2); });
-    y += 30; font(400, 20); text("Tiempo neto: como si todos hubieran salido a la vez.", P, y, K.ink3);
-    // eje
-    const rx0 = P, rx1 = W - P - 230, X = k => rx0 + k / 20 * (rx1 - rx0);
-    // perfil con los corredores
-    y += 40; const pTop = y + 50, pBase = y + 210, EY = e => pBase - e / 90 * (pBase - pTop);
-    g.strokeStyle = K.rule; g.lineWidth = 1; font(400, 16);
-    [20, 40, 60, 80].forEach(e => { g.beginPath(); g.moveTo(X(0), EY(e)); g.lineTo(X(20), EY(e)); g.stroke(); text(`${e} m`, X(20) + 10, EY(e) + 5, K.ink3); });
-    g.fillStyle = K.asphalt; g.beginPath(); g.moveTo(X(0), pBase); for (let k = 0; k <= 200; k++) g.lineTo(X(k / 10), EY(PROFILE[k])); g.lineTo(X(20), pBase); g.closePath(); g.fill();
-    g.strokeStyle = K.paint; g.globalAlpha = .6; g.lineWidth = 2.5; [5, 10, 15].forEach(k => { g.beginPath(); g.moveTo(X(k), EY(elevAt(k))); g.lineTo(X(k), pBase); g.stroke(); }); g.globalAlpha = 1;
-    font(650, 18); ALTOS.forEach(a => text(`${a.n} · ${Math.round(elevAt(a.km))} m`, X(a.km), EY(elevAt(a.km)) - 22, K.ink, "center"));
-    [...sel].sort((a, b) => b.slot - a.slot).forEach(r => { const km = kmAt(r.i, T); if (km == null) return; g.fillStyle = runColor(r); g.strokeStyle = K.bg; g.lineWidth = 3; g.beginPath(); g.arc(X(km), EY(elevAt(km)), 10, 0, Math.PI * 2); g.fill(); g.stroke(); });
-    y = pBase + 26; font(500, 18);
-    [[0, "Behobia"], [5, "km 5"], [10, "km 10"], [15, "km 15"], [20, "Donostia"]].forEach(([k, l]) => text(l, X(k), y, k % 20 ? K.ink3 : K.ink2, k === 0 ? "left" : "center"));
-    y += 20;
-    const refKm = ref ? kmAt(ref.i, T) : null;
-    font(800, 32, true); const nx = P + 28 + Math.max(...sel.map(r => g.measureText(String(C.d[r.i])).width)) + 22;
-    for (const r of sel) {
-      const i = r.i, c = runColor(r);
-      g.fillStyle = K.rule; g.fillRect(P, y, W - 2 * P, 1);
-      const ty = y + 40;
-      g.fillStyle = c; g.fillRect(P, ty - 18, 16, 16);
-      font(800, 32, true); text(String(C.d[i]), P + 28, ty, K.ink);
-      font(700, 32, true); text(valid(i) ? hms(C.t[i]) : "sin tiempo", W - P, ty, K.ink, "right");
-      const tw = g.measureText(valid(i) ? hms(C.t[i]) : "sin tiempo").width;
-      font(600, 24); text(fit(title(C.n[i]), W - P - tw - 24 - nx), nx, ty, K.ink);
-      font(400, 19); text(fit(`${title(GCATS[C.g[i]])}, ${title(TOWNS[C.o[i]])}${valid(i) ? ` · puesto ${n0(rankAll[i])} · ${ms(C.t[i] / KM)} min/km` : ""}`, W - P - nx), nx, ty + 28, K.ink2);
-      // carretera
-      const by = y + 86, bh = 22, mid = by + bh / 2;
-      g.fillStyle = K.asphalt; g.beginPath(); g.roundRect ? g.roundRect(X(0), by, X(20) - X(0), bh, 3) : g.rect(X(0), by, X(20) - X(0), bh); g.fill();
-      g.strokeStyle = K.paint; g.globalAlpha = .45; g.lineWidth = 1.5; g.setLineDash([8, 10]); g.beginPath(); g.moveTo(X(0) + 6, mid); g.lineTo(X(20) - 6, mid); g.stroke(); g.setLineDash([]); g.globalAlpha = 1;
-      [5, 10, 15, 20].forEach(k => { g.globalAlpha = k === 20 ? .9 : .6; g.lineWidth = k === 20 ? 4 : 2.5; g.beginPath(); g.moveTo(X(k), by); g.lineTo(X(k), by + bh); g.stroke(); }); g.globalAlpha = 1;
-      const km = kmAt(i, T); let label = "sin tiempo válido";
-      if (km != null) {
-        g.strokeStyle = c; g.lineWidth = 5; g.lineCap = "round"; g.beginPath(); g.moveTo(X(0) + 3, mid); g.lineTo(X(km), mid); g.stroke(); g.lineCap = "butt";
-        g.fillStyle = c; g.strokeStyle = K.bg; g.lineWidth = 3; g.beginPath(); g.arc(X(km), mid, 10, 0, Math.PI * 2); g.fill(); g.stroke();
-        if (km >= 20) label = T > C.t[i] ? `en meta hace ${ms(T - C.t[i])}` : "cruzando la meta";
-        else if (ref && ref.i !== i && refKm != null) { const gap = refKm - km; label = `km ${km1(km)}, ${gap > 0.05 ? `${km1(gap)} km detrás` : gap < -0.05 ? `${km1(-gap)} km delante` : "a su altura"}`; }
-        else label = `km ${km1(km)}`;
-      }
-      font(500, 19); text(fit(label, W - P - X(20) - 20), X(20) + 20, mid + 7, K.ink2);
-      y += laneH;
-    }
-    g.fillStyle = K.rule; g.fillRect(P, y, W - 2 * P, 1);
-    // tiempos de paso
-    y += 64; font(750, 32, true); text("Tiempos de paso", P, y, K.ink);
-    y += 40; const cols = [W - P - 3 * 170, W - P - 2 * 170, W - P - 170, W - P];
-    font(600, 19); ["Km 5", "Km 10", "Km 15", "Meta"].forEach((l, k) => text(l, cols[k], y, K.ink2, "right"));
-    y += 12; g.fillStyle = K.ink; g.fillRect(P, y, W - 2 * P, 2);
-    for (const r of sel) {
-      y += tblRow; const i = r.i;
-      g.fillStyle = runColor(r); g.fillRect(P, y - 16, 14, 14);
-      font(600, 21); text(fit(first(i), cols[0] - 150 - P - 24), P + 24, y, K.ink);
-      font(400, 21); cpTimes(i).forEach((t, k) => text(t ? hms(t) : "–", cols[k], y, K.ink, "right"));
-      g.fillStyle = K.rule; g.fillRect(P, y + 16, W - 2 * P, 1);
-    }
-    y += 70; font(400, 16);
-    text("Clasificación oficial de clasificacion.behobia-sansebastian.com, 8 de noviembre de 2026.", P, y, K.ink3);
-    const blob = await new Promise(res => cv.toBlob(res, "image/png"));
-    const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
-    a.download = `behobia-2026-${sel.map(r => C.d[r.i]).join("-")}.png`; document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(() => URL.revokeObjectURL(a.href), 5000);
-    msg.textContent = "Imagen guardada en tus descargas.";
-  } catch (e) { msg.textContent = "No se ha podido generar la imagen."; console.error(e); }
-  btn.disabled = false; setTimeout(() => msg.textContent = "", 5000);
-}
-$("save-img").onclick = saveImage;
+
 
 // ---------- historia de Instagram (1080x1920) ----------
 // Lo importante queda entre y=250 e y=1670: arriba y abajo Instagram pone sus controles.
@@ -828,7 +742,7 @@ function storyOne(g, K, W, P, font, text, fit, c) {
   function footer(y) { font(500, 24); text("davidgargonza.github.io/behobia-dashboard", P, y, K.ink); font(400, 20); text("Tiempo neto · clasificación oficial, 8/11/2026", W - P, y, K.ink3, "right"); }
 }
 $("share-ig").onclick = async () => {
-  const btn = $("share-ig"), msg = $("save-msg"); btn.disabled = true; msg.textContent = "Preparando la historia…";
+  const btn = $("share-ig"), msg = $("save-msg"); btn.disabled = true; msg.textContent = "Preparando la imagen…";
   try {
     const blob = await storyBlob(), file = new File([blob], `behobia-2026-historia-${sel.map(r => C.d[r.i]).join("-")}.png`, { type: "image/png" });
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
@@ -837,8 +751,8 @@ $("share-ig").onclick = async () => {
     }
     const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = file.name; document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(a.href), 5000);
-    msg.textContent = "Imagen guardada. Ábrela desde Instagram como historia.";
-  } catch (e) { console.error(e); msg.textContent = "No se ha podido generar la historia."; }
+    msg.textContent = "Imagen guardada en tus descargas.";
+  } catch (e) { console.error(e); msg.textContent = "No se ha podido generar la imagen."; }
   btn.disabled = false; setTimeout(() => msg.textContent = "", 6000);
 };
 // el enlace lleva los dorsales: quien lo abre ve la misma comparación
