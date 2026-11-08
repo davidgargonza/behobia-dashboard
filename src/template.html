@@ -45,6 +45,7 @@
   }
 }
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 html { -webkit-text-size-adjust: 100%; }
 body { margin: 0; background: var(--bg); color: var(--ink);
   font-family: "Archivo", system-ui, sans-serif; font-size: var(--t-15); line-height: 1.5; font-stretch: 100%; }
@@ -112,6 +113,14 @@ input[type=range] { width: 100%; accent-color: var(--ink); height: 28px; cursor:
 .road-axis .alt-note { font-size: var(--t-13); color: var(--ink-2); max-width: 30ch; padding-bottom: var(--s-8); }
 .lane svg, .road-axis svg { display: block; width: 100%; height: auto; overflow: visible; }
 .example { font-size: var(--t-13); color: var(--ink-2); margin-top: var(--s-12); }
+.winners { margin-top: var(--s-24); }
+.winners button { border: 1px solid var(--ink); background: var(--ink); color: var(--bg); border-radius: var(--radius); padding: 10px 16px; font-weight: 600; cursor: pointer; font-size: var(--t-15); text-align: left; }
+.winners button:hover { background: transparent; color: var(--ink); }
+.winners button small { display: block; font-weight: 400; font-size: var(--t-13); opacity: .85; }
+.climb { margin-top: var(--s-40); }
+.climb h3 { font-size: var(--t-22); font-weight: 750; font-stretch: 72%; margin: 0; line-height: 1.15; }
+.climb h3 span { font-size: var(--t-15); font-weight: 400; font-stretch: 100%; color: var(--ink-2); margin-left: var(--s-8); }
+.climb svg { display: block; width: 100%; height: auto; overflow: visible; margin-top: var(--s-12); }
 .save { display: flex; align-items: center; gap: var(--s-12); margin-top: var(--s-16); }
 .save button { border: 1px solid var(--ink); background: var(--ink); color: var(--bg); border-radius: var(--radius); padding: 8px 14px; font-weight: 600; cursor: pointer; }
 .save button:hover { background: transparent; color: var(--ink); }
@@ -196,18 +205,24 @@ footer button { border: 0; background: none; padding: 0; text-decoration: underl
         <h2 id="h-road">Dónde iba cada uno</h2>
         <p class="lead" id="road-lead"></p>
       </div>
-      <div class="clock" aria-live="polite"><div class="t" id="clock-t">0:00:00</div><div class="w">de carrera</div></div>
+      <div class="clock" id="clock" aria-live="polite"><div class="t" id="clock-t">0:00:00</div><div class="w">de carrera</div></div>
     </div>
-    <div class="scrub">
+    <div class="winners" id="winners" hidden><button id="add-winners"></button></div>
+    <div class="scrub" id="scrub-row">
       <div class="marks" id="marks" role="group" aria-label="Saltar a un punto de control"></div>
       <input type="range" id="scrub" min="0" max="3600" step="1" value="0" aria-label="Tiempo de carrera">
     </div>
     <div class="lanes" id="lanes"></div>
     <div class="save"><button id="save-img">Guardar como imagen</button><span id="save-msg" aria-live="polite"></span></div>
-    <p class="example" id="example" hidden>Para empezar, los tres primeros y la primera mujer. Quítalos o añade a quien quieras con el buscador.</p>
   </section>
 
-  <section aria-labelledby="h-table">
+  <section aria-labelledby="h-climb" id="climb-sec">
+    <h2 id="h-climb">Cuánto cayó en las cuestas</h2>
+    <p class="lead">No hay cronometraje en lo alto de las cuestas, así que se mide el tramo de 5 km que contiene cada una: cuántos segundos por kilómetro fue más lento que su propio ritmo medio y cuántos puestos ganó o perdió en ese tramo. La raya gris marca lo que cayó la mediana de todos los que llegaron. En el tramo de Gaintxurizketa se baja casi tanto como se sube, así que casi todos van más rápido que su media: ahí lo que cuenta es quedar a la izquierda de la raya gris.</p>
+    <div id="climbs"></div>
+  </section>
+
+  <section aria-labelledby="h-table" id="table-sec">
     <h2 id="h-table">Tiempos de paso</h2>
     <p class="lead">En negrita, el mejor de cada fila. Los puestos de los km 5, 10 y 15 se cuentan entre quienes tienen ese paso registrado. El cronometraje solo mide los km 5, 10 y 15: el paso por los altos es una estimación que supone ritmo constante dentro de cada tramo.</p>
     <div class="table-wrap"><table id="cmp"></table></div>
@@ -283,6 +298,21 @@ function timeAtKm(i, km) {
   return C.t[i];
 }
 
+// ---------- cuestas: tramo de 5 km que contiene cada una ----------
+const CLIMBS = [{ n: "Gaintxurizketa", seg: 1, tramo: "km 5 a 10" }, { n: "Miracruz", seg: 3, tramo: "km 15 a meta" }];
+const SPL = order.filter(i => segs(i));                         // con los tres pasos registrados
+const rankS = [0, 1, 2, 3].map(k => { const r = new Int32Array(N); [...SPL].sort((a, b) => cpTimes(a)[k] - cpTimes(b)[k]).forEach((i, j) => r[i] = j + 1); return r; });
+const slow = (i, seg) => segs(i)[seg] / 5 - C.t[i] / 20;      // s/km más lento que su ritmo medio
+const relSlow = (i, seg) => (segs(i)[seg] / 5) / (C.t[i] / 20) - 1;
+const SLOWSORT = CLIMBS.map(c => SPL.map(i => relSlow(i, c.seg)).sort((a, b) => a - b));
+const SLOWMED = CLIMBS.map(c => { const a = SPL.map(i => slow(i, c.seg)).sort((x, y) => x - y); return a[a.length >> 1]; });
+function climbStats(i, ci) {
+  if (!valid(i) || !segs(i)) return null;
+  const c = CLIMBS[ci], d = slow(i, c.seg), r = relSlow(i, c.seg), arr = SLOWSORT[ci];
+  let lo = 0, hi = arr.length; while (lo < hi) { const m = (lo + hi) >> 1; arr[m] <= r ? lo = m + 1 : hi = m; }
+  return { d, better: (arr.length - lo) / arr.length, gained: rankS[c.seg - 1][i] - rankS[c.seg][i], pace: segs(i)[c.seg] / 5 };
+}
+
 // ---------- formato ----------
 const hms = s => { s = Math.round(s); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = s % 60; return `${h}:${String(m).padStart(2, "0")}:${String(x).padStart(2, "0")}`; };
 const fmt = s => s ? hms(s) : "–";
@@ -315,7 +345,7 @@ function hover(node, fn, leave) { node.addEventListener("mousemove", ev => { con
 
 // ---------- estado ----------
 const $ = id => document.getElementById(id);
-let sel = [], paceMode = "abs", T = 0, isExample = false;
+let sel = [], paceMode = "abs", T = 0;
 const col = r => COLORS[r.slot];
 const refRunner = () => sel.filter(r => valid(r.i)).sort((a, b) => C.t[a.i] - C.t[b.i])[0];
 function warn(t) { $("warn").textContent = t; clearTimeout(warn.t); warn.t = setTimeout(() => $("warn").textContent = "", 4000); }
@@ -323,9 +353,9 @@ function add(i) {
   if (sel.some(r => r.i === i)) return;
   if (sel.length >= MAX) { warn(`Ya hay ${MAX} en la comparación. Quita a alguien para añadir a otra persona.`); return; }
   const used = new Set(sel.map(r => r.slot)); let slot = 0; while (used.has(slot)) slot++;
-  sel.push({ i, slot }); isExample = false; render(true);
+  sel.push({ i, slot }); render(true);
 }
-function remove(i) { sel = sel.filter(r => r.i !== i); isExample = false; render(true); }
+function remove(i) { sel = sel.filter(r => r.i !== i); render(true); }
 
 // ---------- buscador ----------
 const q = $("q"), res = $("results");
@@ -365,10 +395,10 @@ function pick(i) { if (sel.some(r => r.i === i)) return; add(i); q.value = ""; m
 // ---------- render ----------
 function render(resetClock) {
   writeHash();
-  $("example").hidden = !isExample;
+  $("table-sec").hidden = $("climb-sec").hidden = !sel.length;
   const ref = refRunner();
   if (resetClock && ref) T = C.t[ref.i];
-  renderRoad(); renderTable(); renderPace(); renderDist();
+  renderRoad(); renderClimbs(); renderTable(); renderPace(); renderDist();
 }
 
 // ---------- la carretera ----------
@@ -389,7 +419,7 @@ function roadCaption(ref) {
 // el perfil con un punto por corredor en el sitio donde iba
 function drawProfile(svg, W, x, H, narrow, ref) {
   const top = 26, base = H - 22, maxE = 90, y = e => base - e / maxE * (base - top);
-  [20, 40, 60, 80].forEach(e => { el("line", { x1: x(0), x2: x(20), y1: y(e), y2: y(e), class: "grid" }, svg); el("text", { x: narrow ? x(20) : x(20) + 8, y: y(e) + (narrow ? -3 : 4), "text-anchor": narrow ? "end" : "start", text: `${e} m` }, svg); });
+  [20, 40, 60, 80].forEach(e => { el("line", { x1: x(0), x2: x(20), y1: y(e), y2: y(e), class: "grid" }, svg); el("text", { x: narrow ? x(0) + 2 : x(20) + 8, y: y(e) + (narrow ? -3 : 4), "text-anchor": "start", text: `${e} m` }, svg); });
   let d = `M${x(0)},${base}`; for (let k = 0; k <= 200; k++) d += `L${x(k / 10).toFixed(1)},${y(PROFILE[k]).toFixed(1)}`; d += `L${x(20)},${base}Z`;
   el("path", { d, style: "fill:var(--asphalt)" }, svg);
   [5, 10, 15].forEach(k => el("line", { x1: x(k), x2: x(k), y1: y(elevAt(k)), y2: base, style: "stroke:var(--paint);stroke-width:2;opacity:.6" }, svg));
@@ -403,11 +433,15 @@ function drawProfile(svg, W, x, H, narrow, ref) {
 }
 function renderRoad() {
   const lanes = $("lanes"), ref = refRunner(), scrub = $("scrub"), marks = $("marks");
-  if (!sel.length) {
-    lanes.innerHTML = `<p class="lead">No hay nadie en la comparación. Usa el buscador de arriba para añadir corredores.</p>`;
-    $("road-lead").textContent = ""; marks.innerHTML = ""; scrub.hidden = true; $("clock-t").textContent = "–"; $("save-img").parentNode.hidden = true; return;
+  const empty = !sel.length;
+  $("winners").hidden = !empty; $("clock").hidden = empty; $("scrub-row").hidden = empty || !ref; $("save-img").parentNode.hidden = empty;
+  if (empty) {
+    $("road-lead").textContent = "Añade corredores con el buscador y aparecerán sobre el perfil del recorrido, cada uno en el punto donde iba. Si no sabes por dónde empezar, prueba con quienes ganaron.";
+    lanes.innerHTML = ""; const axisHost = document.createElement("div"); axisHost.className = "road-axis";
+    axisHost.innerHTML = "<p class='alt-note'>Perfil del recorrido: 192 m de desnivel positivo en 20 km.</p><div class='ax'></div>"; lanes.appendChild(axisHost);
+    const host = axisHost.querySelector(".ax"), W = widthOf(host), narrow = W < 560, pad = { l: 8, r: narrow ? 8 : 150 }, x = k => pad.l + k / 20 * (W - pad.l - pad.r), PH = narrow ? 170 : 190;
+    drawProfile(svgIn(host, W, PH), W, x, PH, narrow, null); return;
   }
-  scrub.hidden = !ref; $("save-img").parentNode.hidden = false;
   const maxT = Math.max(...sel.filter(r => valid(r.i)).map(r => C.t[r.i]), 1);
   scrub.max = maxT; T = Math.min(Math.max(T, 0), maxT); scrub.value = T;
   $("clock-t").textContent = hms(T);
@@ -425,6 +459,7 @@ function renderRoad() {
       <button class="rm" data-rm="${i}">Quitar de la comparación</button></div><div class="rd"></div>`;
     lanes.appendChild(d); return { r, host: d.querySelector(".rd") };
   });
+  /* el perfil y los carriles comparten columna */
   const W = widthOf(rows[0].host), narrow = W < 560, pad = { l: 8, r: narrow ? 8 : 150 }, x = k => pad.l + k / 20 * (W - pad.l - pad.r);
   const PH = narrow ? 170 : 190, ax = svgIn(axisHost.querySelector(".ax"), W, PH);
   drawProfile(ax, W, x, PH, narrow, ref);
@@ -550,8 +585,50 @@ function renderDist() {
   }, () => cross.style.display = "none");
 }
 
+// ---------- cuestas ----------
+function renderClimbs() {
+  const host = $("climbs"); host.innerHTML = ""; if (!sel.length) return;
+  CLIMBS.forEach((c, ci) => {
+    const [up, dn] = gainLoss(c.seg * 5, c.seg * 5 + 5);
+    const box = document.createElement("div"); box.className = "climb";
+    box.innerHTML = `<h3>${c.n}<span>tramo ${c.tramo}, +${Math.round(up)} m y −${Math.round(dn)} m</span></h3><div class="cv"></div>`;
+    host.appendChild(box);
+    const cv = box.querySelector(".cv"), W = widthOf(cv), narrow = W < 760, rowH = narrow ? 58 : 34;
+    const items = sel.map(r => ({ r, st: climbStats(r.i, ci) }));
+    const nameW = narrow ? 0 : 130, txtW = narrow ? 0 : 420, top = 22, H = top + items.length * rowH + 8;
+    const vals = items.filter(it => it.st).map(it => it.st.d).concat(SLOWMED[ci], 0);
+    const span = Math.max(20, ...vals.map(Math.abs)) * 1.1, lo = Math.min(0, ...vals) < 0 ? -span : -span * .25, hiV = span;
+    const x0 = nameW, x1 = W - txtW - 8, x = v => x0 + (v - lo) / (hiV - lo) * (x1 - x0);
+    const svg = svgIn(cv, W, H);
+    if (!narrow) el("line", { x1: x(0), x2: x(0), y1: top - 6, y2: H - 4, class: "base" }, svg);
+    if (x(0) > 100) el("text", { x: x(0) - 6, y: 12, "text-anchor": "end", text: "← más rápido" }, svg);
+    el("text", { x: x(0) + 6, y: 12, text: "más lento que su media →" }, svg);
+    const mx = x(SLOWMED[ci]), sgn = v => `${v >= 0 ? "+" : "−"}${Math.round(Math.abs(v))}`;
+    items.forEach(({ r, st }, k) => {
+      const y0 = top + k * rowH, cy = y0 + (narrow ? 12 : rowH / 2), name = first(r.i);
+      el("line", { x1: mx, x2: mx, y1: narrow ? cy - 11 : y0, y2: narrow ? cy + 11 : y0 + rowH, style: "stroke:var(--ink-3);stroke-width:2;opacity:.7" }, svg);
+      if (narrow) el("line", { x1: x(0), x2: x(0), y1: cy - 11, y2: cy + 11, class: "base" }, svg);
+      if (!narrow) el("text", { x: 0, y: cy + 4, class: "who", text: name }, svg);
+      if (!st) { el("text", { x: x(0) + 8, y: cy + 4, class: "lbl", text: `${narrow ? name + ": " : ""}sin pasos intermedios` }, svg); return; }
+      const xe = x(st.d), bh = 14, dir = xe >= x(0) ? 1 : -1, len = Math.abs(xe - x(0)), rr = Math.min(4, len);
+      if (len > .5) el("path", { d: `M${x(0)},${cy - bh / 2} H${xe - dir * rr} Q${xe},${cy - bh / 2} ${xe},${cy - bh / 2 + rr} V${cy + bh / 2 - rr} Q${xe},${cy + bh / 2} ${xe - dir * rr},${cy + bh / 2} H${x(0)} Z`, style: `fill:${col(r)}` }, svg);
+      const g = st.gained, txt = narrow
+        ? `${sgn(st.d)} s/km · ${g > 0 ? "+" : g < 0 ? "−" : ""}${n0(Math.abs(g))} ${Math.abs(g) === 1 ? "puesto" : "puestos"} · mejor que el ${pct(st.better)}`
+        : `${sgn(st.d)} s/km · ${g > 0 ? "ganó " + n0(g) : g < 0 ? "perdió " + n0(-g) : "mantuvo"} ${Math.abs(g) === 1 ? "puesto" : g ? "puestos" : "el puesto"} · aguantó mejor que el ${pct(st.better)}`;
+      el("text", narrow ? { x: 0, y: cy + 30, class: "lbl", text: `${name}: ${txt}` } : { x: W - txtW + 8, y: cy + 4, class: "lbl", text: txt }, svg);
+      const hit = el("rect", { x: 0, y: y0, width: W, height: rowH, fill: "transparent" }, svg);
+      hover(hit, () => `<div class="t">${esc(title(C.n[r.i]))} · ${c.n}</div>` + row("Ritmo en el tramo", ms(st.pace) + " min/km", col(r)) + row("Su ritmo medio", ms(C.t[r.i] / KM) + " min/km") + row("Diferencia", `${sgn(st.d)} s/km`) + row("Mediana de todos", `${sgn(SLOWMED[ci])} s/km`) + row("Puestos en el tramo", `${g > 0 ? "+" : g < 0 ? "−" : ""}${n0(Math.abs(g))}`) + row("Cayó menos que", pct(st.better) + " de la carrera"));
+    });
+    el("text", { x: Math.min(Math.max(mx, 80), W - 80), y: H + 12, "text-anchor": "middle", text: `mediana de todos ${sgn(SLOWMED[ci])} s/km` }, svg);
+    svg.setAttribute("viewBox", `0 0 ${W} ${H + 16}`);
+  });
+}
+
 // ---------- dirección y arranque ----------
-function writeHash() { const h = sel.map(r => C.d[r.i]).join(","); history.replaceState(null, "", h && !isExample ? "#d=" + h : location.pathname + location.search); }
+function writeHash() { const h = sel.map(r => C.d[r.i]).join(","); history.replaceState(null, "", h ? "#d=" + h : location.pathname + location.search); }
+const WIN = [order.find(i => C.s[i] === 0), order.find(i => C.s[i] === 1)];
+$("add-winners").innerHTML = `Añadir a quienes ganaron<small>${WIN.map(i => `${esc(title(C.n[i]))}, ${hms(C.t[i])}`).join(" · ")}</small>`;
+$("add-winners").onclick = () => { WIN.forEach(i => { if (!sel.some(r => r.i === i) && sel.length < MAX) { const used = new Set(sel.map(r => r.slot)); let slot = 0; while (used.has(slot)) slot++; sel.push({ i, slot }); } }); render(true); };
 // ---------- guardar como imagen (para mandarla por WhatsApp) ----------
 
 async function saveImage() {
@@ -645,7 +722,6 @@ $("save-img").onclick = saveImage;
   const p = new URLSearchParams(location.hash.slice(1)), v = p.get("d") || p.get("dorsal") || "";
   const byD = new Map(); for (let i = 0; i < N; i++) byD.set(C.d[i], i);
   v.split(",").map(Number).filter(Boolean).slice(0, MAX).forEach(d => { const i = byD.get(d); if (i !== undefined && !sel.some(r => r.i === i)) sel.push({ i, slot: sel.length }); });
-  if (!sel.length) { const w = order.find(i => C.s[i] === 1); [order[0], order[1], order[2], w].forEach((i, k) => sel.push({ i, slot: k })); isExample = true; }
   render(true);
 })();
 let rz; addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => render(false), 150); });
