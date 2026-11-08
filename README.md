@@ -19,3 +19,5 @@ python3 -I scripts/build_html.py   # escribe index.html
 `<total_resultados>` es el número que muestra la web en «Número total de resultados».
 
 Tipografía: Archivo (SIL Open Font License), incrustada en el HTML desde `src/fonts/`.
+
+`data/perfil.json`: altitud cada 100 m, digitalizada del perfil del dossier técnico oficial 2026 (pág. 11). Desnivel positivo resultante: 193 m (oficial: 192 m).

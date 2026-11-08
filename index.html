@@ -89,9 +89,10 @@ h2 { font-size: var(--t-30); line-height: 1.1; font-weight: 750; font-stretch: 7
 .clock .t { font-size: var(--t-64); line-height: .9; font-weight: 700; font-stretch: 62%; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
 .clock .w { font-size: var(--t-13); color: var(--ink-2); }
 .scrub { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--s-12) var(--s-24); align-items: center; margin-top: var(--s-24); }
-.marks { display: flex; border: 1px solid var(--ink); border-radius: var(--radius); overflow: hidden; }
+.marks { display: flex; flex-wrap: wrap; border: 1px solid var(--ink); border-radius: var(--radius); overflow: hidden; }
 .marks button { border: 0; background: transparent; padding: 6px 12px; cursor: pointer; font-size: var(--t-13); font-weight: 600; }
 .marks button + button { border-left: 1px solid var(--ink); }
+.marks button.alto { font-weight: 500; font-style: normal; }
 .marks button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
 input[type=range] { width: 100%; accent-color: var(--ink); height: 28px; cursor: pointer; }
 
@@ -106,7 +107,8 @@ input[type=range] { width: 100%; accent-color: var(--ink); height: 28px; cursor:
 .who .ft { font-variant-numeric: tabular-nums; font-weight: 600; }
 .who .rm { grid-column: 3 / 5; justify-self: start; border: 0; background: none; padding: 0; margin-top: 2px; font-size: var(--t-13); color: var(--ink-2); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
 .who .rm:hover { color: var(--ink); }
-.road-axis { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: var(--s-24); }
+.road-axis { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: var(--s-24); align-items: end; margin-bottom: var(--s-8); }
+.road-axis .alt-note { font-size: var(--t-13); color: var(--ink-2); max-width: 30ch; padding-bottom: var(--s-8); }
 .lane svg, .road-axis svg { display: block; width: 100%; height: auto; overflow: visible; }
 .example { font-size: var(--t-13); color: var(--ink-2); margin-top: var(--s-12); }
 .save { display: flex; align-items: center; gap: var(--s-12); margin-top: var(--s-16); }
@@ -132,6 +134,7 @@ td.best { font-weight: 750; }
 svg text { fill: var(--ink-3); font-size: 12px; font-family: inherit; font-variant-numeric: tabular-nums; }
 svg text.lbl { fill: var(--ink-2); font-size: 13px; }
 svg text.who { fill: var(--ink); font-size: 13px; font-weight: 650; }
+svg text.alto { fill: var(--ink); font-size: 13px; font-weight: 650; }
 svg .grid { stroke: var(--rule); stroke-width: 1; shape-rendering: crispEdges; }
 svg .base { stroke: var(--ink-3); stroke-width: 1; shape-rendering: crispEdges; }
 .two { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: var(--s-64); }
@@ -159,7 +162,7 @@ footer button { border: 0; background: none; padding: 0; text-decoration: underl
   h1 { font-size: var(--t-44); }
   .two { grid-template-columns: 1fr; gap: var(--s-40); }
   .lane, .road-axis { grid-template-columns: 1fr; gap: var(--s-8); }
-  .road-axis > div:first-child { display: none; }
+  .road-axis .alt-note { max-width: none; padding-bottom: 0; }
   .road-head { grid-template-columns: 1fr; }
   .clock { text-align: left; }
   .clock .t { font-size: var(--t-44); }
@@ -205,14 +208,14 @@ footer button { border: 0; background: none; padding: 0; text-decoration: underl
 
   <section aria-labelledby="h-table">
     <h2 id="h-table">Tiempos de paso</h2>
-    <p class="lead">En negrita, el mejor de cada fila. Los puestos de los km 5, 10 y 15 se cuentan entre quienes tienen ese paso registrado.</p>
+    <p class="lead">En negrita, el mejor de cada fila. Los puestos de los km 5, 10 y 15 se cuentan entre quienes tienen ese paso registrado. El cronometraje solo mide los km 5, 10 y 15: el paso por los altos es una estimación que supone ritmo constante dentro de cada tramo.</p>
     <div class="table-wrap"><table id="cmp"></table></div>
   </section>
 
   <section class="two">
     <div>
       <h2 id="h-pace">Ritmo en cada tramo</h2>
-      <p class="lead">Minutos por kilómetro en cada tramo de 5 km. En gris, la mediana de todos los que llegaron con tiempo válido.</p>
+      <p class="lead">Minutos por kilómetro en cada tramo de 5 km, con lo que sube y baja cada uno. Gaintxurizketa cae en el tramo del km 5 al 10 y Miracruz en el último. En gris, la mediana de todos los que llegaron.</p>
       <div class="toggle" id="pace-mode" role="group" aria-label="Unidad"><button data-v="abs" aria-pressed="true">min/km</button><button data-v="rel" aria-pressed="false">respecto a su ritmo medio</button></div>
       <div class="chart" id="pace"></div>
       <div class="keys" id="pace-keys"></div>
@@ -226,6 +229,7 @@ footer button { border: 0; background: none; padding: 0; text-decoration: underl
 
   <footer>
     <p>Datos de clasificacion.behobia-sansebastian.com: clasificación provisional en directo descargada el 8 de noviembre de 2026, pendiente de verificación por los jueces. Puede haber cambios en la oficial.</p>
+    <p>El perfil está digitalizado del dossier técnico oficial de 2026 (página 11). Sale un desnivel positivo de 193 m frente a los 192 m oficiales, y el punto más alto, 80 m en el km 7,3, coincide con el dato oficial.</p>
     <p>Para los puestos se descartan los registros sin tiempo, con tiempo 00:00:00 o sin hora de salida. La provincia sale de cruzar el municipio con el listado del INE.</p>
   </footer>
 </div>
@@ -262,6 +266,20 @@ function kmAt(i, T) {
   const pts = [[0, 0]]; [[C.t5[i], 5], [C.t10[i], 10], [C.t15[i], 15]].forEach(p => p[0] > 0 && pts.push(p)); pts.push([C.t[i], 20]);
   for (let k = 1; k < pts.length; k++) if (T <= pts[k][0]) { const [t0, d0] = pts[k - 1], [t1, d1] = pts[k]; return d0 + (d1 - d0) * (T - t0) / (t1 - t0); }
   return 20;
+}
+
+// ---------- perfil del recorrido ----------
+// Altitud (m) cada 100 m, digitalizada del perfil del dossier técnico oficial 2026 (pág. 11).
+const PROFILE = [4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 5.0, 6.0, 7.7, 10.2, 12.7, 14.0, 15.6, 17.3, 17.0, 16.6, 17.0, 19.6, 21.3, 23.3, 25.3, 27.3, 29.0, 30.3, 31.6, 36.9, 33.3, 33.3, 32.9, 34.7, 36.5, 38.3, 35.6, 31.6, 29.0, 28.3, 30.3, 32.9, 33.3, 31.9, 30.1, 26.6, 25.0, 23.5, 21.6, 18.3, 17.0, 14.0, 14.3, 16.0, 17.1, 18.3, 19.6, 21.1, 22.6, 24.0, 29.0, 31.9, 35.6, 39.6, 44.9, 48.2, 51.9, 57.2, 60.9, 64.5, 67.5, 73.9, 77.5, 80.0, 76.3, 71.9, 66.9, 62.2, 54.2, 49.6, 47.2, 44.9, 43.9, 42.4, 40.6, 39.6, 38.3, 38.3, 39.6, 38.6, 36.9, 35.3, 31.6, 29.1, 26.6, 24.6, 21.0, 18.3, 16.6, 13.0, 10.5, 10.0, 10.0, 9.8, 9.7, 9.5, 9.3, 9.3, 9.3, 9.0, 9.0, 9.0, 9.0, 8.7, 8.7, 8.6, 8.4, 8.0, 8.0, 8.0, 8.0, 8.0, 7.7, 7.7, 7.3, 9.0, 11.7, 17.3, 21.0, 24.6, 24.6, 20.6, 16.0, 12.3, 10.0, 11.7, 9.3, 4.0, 4.0, 3.7, 3.7, 3.3, 5.7, 9.0, 13.0, 12.0, 10.0, 7.7, 5.0, 4.7, 4.0, 4.0, 4.7, 7.7, 9.0, 11.7, 10.3, 9.0, 7.3, 9.3, 13.7, 17.6, 24.3, 28.0, 32.6, 36.3, 42.9, 47.1, 47.6, 43.6, 40.9, 38.3, 35.3, 30.3, 28.1, 25.0, 20.6, 18.3, 15.5, 13.3, 12.0, 9.3, 8.7, 10.0, 12.0, 13.2, 13.3, 12.0, 11.2, 10.0, 9.0, 7.7, 7.3, 7.3, 7.3, 7.3, 7.4, 7.4, 7.4, 7.4, 7.4];
+const ALTOS = [{ km: 7.3, n: "Gaintxurizketa" }, { km: 13.0, n: "Kaputxinoak" }, { km: 16.8, n: "Miracruz" }];
+const elevAt = km => { const f = Math.max(0, Math.min(200, km * 10)), a = Math.floor(f), b = Math.min(200, a + 1); return PROFILE[a] + (PROFILE[b] - PROFILE[a]) * (f - a); };
+const gainLoss = (a, b) => { let up = 0, dn = 0; for (let k = a * 10; k < b * 10; k++) { const d = PROFILE[k + 1] - PROFILE[k]; d > 0 ? up += d : dn -= d; } return [up, dn]; };
+// tiempo neto estimado al pasar por un km, suponiendo ritmo constante dentro de cada tramo con paso registrado
+function timeAtKm(i, km) {
+  if (!valid(i)) return 0;
+  const pts = [[0, 0]]; [[C.t5[i], 5], [C.t10[i], 10], [C.t15[i], 15]].forEach(p => p[0] > 0 && pts.push(p)); pts.push([C.t[i], 20]);
+  for (let k = 1; k < pts.length; k++) if (km <= pts[k][1]) { const [t0, d0] = pts[k - 1], [t1, d1] = pts[k]; return Math.round(t0 + (t1 - t0) * (km - d0) / (d1 - d0)); }
+  return C.t[i];
 }
 
 // ---------- formato ----------
@@ -354,6 +372,34 @@ function render(resetClock) {
 
 // ---------- la carretera ----------
 const PLACES = [[0, "Behobia"], [5, "km 5"], [10, "km 10"], [15, "km 15"], [20, "Donostia"]];
+function jumpPoints(i) {
+  const rt = cpTimes(i), out = [];
+  [[5, "Km 5", rt[0]], [7.3, "Gaintxurizketa", 0], [10, "Km 10", rt[1]], [13, "Kaputxinoak", 0], [15, "Km 15", rt[2]], [16.8, "Miracruz", 0], [20, "Meta", rt[3]]]
+    .forEach(([km, label, t]) => { const alto = !t && km % 5 !== 0; t = t || (alto ? timeAtKm(i, km) : 0); if (t) out.push({ km, label, t, alto }); });
+  return out;
+}
+function roadCaption(ref) {
+  if (!ref) return "Nadie de la comparación tiene tiempo válido.";
+  const n = first(ref.i), at = jumpPoints(ref.i).find(s => s.t === Math.round(T));
+  if (!at) return `Así iban a ${hms(T)} de carrera, contando desde que cada uno cruzó la salida.`;
+  if (at.alto) return `Así iban cuando ${n}, el más rápido de la comparación, coronaba ${at.label} (paso estimado, a ${hms(T)}).`;
+  return `Así iban cuando ${n}, el más rápido de la comparación, ${at.km === 20 ? "cruzó la meta" : "pasó por el km " + at.km}, a ${hms(T)}.`;
+}
+// el perfil con un punto por corredor en el sitio donde iba
+function drawProfile(svg, W, x, H, narrow, ref) {
+  const top = 26, base = H - 22, maxE = 90, y = e => base - e / maxE * (base - top);
+  [20, 40, 60, 80].forEach(e => { el("line", { x1: x(0), x2: x(20), y1: y(e), y2: y(e), class: "grid" }, svg); el("text", { x: narrow ? x(20) : x(20) + 8, y: y(e) + (narrow ? -3 : 4), "text-anchor": narrow ? "end" : "start", text: `${e} m` }, svg); });
+  let d = `M${x(0)},${base}`; for (let k = 0; k <= 200; k++) d += `L${x(k / 10).toFixed(1)},${y(PROFILE[k]).toFixed(1)}`; d += `L${x(20)},${base}Z`;
+  el("path", { d, style: "fill:var(--asphalt)" }, svg);
+  [5, 10, 15].forEach(k => el("line", { x1: x(k), x2: x(k), y1: y(elevAt(k)), y2: base, style: "stroke:var(--paint);stroke-width:2;opacity:.6" }, svg));
+  el("line", { x1: x(0), x2: x(20), y1: base, y2: base, class: "base" }, svg);
+  PLACES.forEach(([k, l]) => el("text", { x: x(k), y: H - 4, "text-anchor": k === 0 ? "start" : k === 20 && narrow ? "end" : "middle", class: k % 20 ? "" : "lbl", text: narrow && k % 20 ? String(k) : l }, svg));
+  ALTOS.forEach(a => { const ax = x(a.km), ay = y(elevAt(a.km)); el("line", { x1: ax, x2: ax, y1: ay - 9, y2: ay - 14, style: "stroke:var(--ink);stroke-width:1" }, svg); el("text", { x: ax, y: ay - 18, "text-anchor": "middle", class: "alto", text: narrow ? a.n : `${a.n} · ${Math.round(elevAt(a.km))} m` }, svg); });
+  const marks = sel.map(r => ({ r, km: kmAt(r.i, T) })).filter(m => m.km != null).sort((a, b) => b.r.slot - a.r.slot);
+  marks.forEach(({ r, km }) => el("circle", { class: "dot", cx: x(km), cy: y(elevAt(km)), r: 7, style: `fill:${col(r)};stroke:var(--bg);stroke-width:2.5` }, svg));
+  const hit = el("rect", { x: x(0), y: top, width: x(20) - x(0), height: base - top, fill: "transparent" }, svg);
+  hover(hit, ev => { const rr = svg.getBoundingClientRect(), px = (ev.clientX - rr.left) * W / rr.width, km = Math.max(0, Math.min(20, (px - x(0)) / (x(20) - x(0)) * 20)); return `<div class="t">Km ${km1(km)}</div>` + row("Altitud", `${Math.round(elevAt(km))} m`) + marks.map(m => row(first(m.r.i), `km ${km1(m.km)}`, col(m.r))).join(""); });
+}
 function renderRoad() {
   const lanes = $("lanes"), ref = refRunner(), scrub = $("scrub"), marks = $("marks");
   if (!sel.length) {
@@ -365,13 +411,11 @@ function renderRoad() {
   scrub.max = maxT; T = Math.min(Math.max(T, 0), maxT); scrub.value = T;
   $("clock-t").textContent = hms(T);
   if (ref) {
-    const rt = cpTimes(ref.i), rName = first(ref.i), at = rt.findIndex(t => t === Math.round(T));
-    marks.innerHTML = ["Km 5", "Km 10", "Km 15", "Meta"].map((l, k) => rt[k] ? `<button data-t="${rt[k]}" aria-pressed="${k === at}">${l}</button>` : "").join("");
-    $("road-lead").textContent = at >= 0
-      ? `Así iban cuando ${rName}, el más rápido de la comparación, ${at === 3 ? "cruzó la meta" : "pasó por el km " + [5, 10, 15][at]}. Arrastra la barra para ver cualquier otro momento.`
-      : `Así iban a ${hms(T)} de carrera, contando desde que cada uno cruzó la salida. Los botones saltan a los pasos de ${rName}.`;
+    const rName = first(ref.i), stops = jumpPoints(ref.i), at = stops.find(s => s.t === Math.round(T));
+    marks.innerHTML = stops.map(s => `<button data-t="${s.t}" class="${s.alto ? "alto" : ""}" aria-pressed="${s === at}">${s.label}</button>`).join("");
+    $("road-lead").textContent = roadCaption(ref) + (at ? " Arrastra la barra para ver cualquier otro momento." : ` Los botones saltan a los pasos de ${rName}.`);
   } else { marks.innerHTML = ""; $("road-lead").textContent = "Nadie de la comparación tiene tiempo válido."; }
-  const axisHost = document.createElement("div"); axisHost.className = "road-axis"; axisHost.innerHTML = "<div></div><div class='ax'></div>";
+  const axisHost = document.createElement("div"); axisHost.className = "road-axis"; axisHost.innerHTML = "<p class='alt-note'>Perfil del recorrido: 192 m de desnivel positivo en 20 km. El punto de cada corredor marca dónde iba.</p><div class='ax'></div>";
   lanes.innerHTML = ""; lanes.appendChild(axisHost);
   const rows = sel.map(r => {
     const i = r.i, d = document.createElement("div"); d.className = "lane";
@@ -381,8 +425,8 @@ function renderRoad() {
     lanes.appendChild(d); return { r, host: d.querySelector(".rd") };
   });
   const W = widthOf(rows[0].host), narrow = W < 560, pad = { l: 8, r: narrow ? 8 : 150 }, x = k => pad.l + k / 20 * (W - pad.l - pad.r);
-  const ax = svgIn(axisHost.querySelector(".ax"), W, 22);
-  PLACES.forEach(([k, l]) => el("text", { x: x(k), y: 15, "text-anchor": k === 0 ? "start" : k === 20 && narrow ? "end" : "middle", class: k % 20 ? "" : "lbl", text: narrow && k % 20 ? String(k) : l }, ax));
+  const PH = narrow ? 170 : 190, ax = svgIn(axisHost.querySelector(".ax"), W, PH);
+  drawProfile(ax, W, x, PH, narrow, ref);
   const refKm = ref ? kmAt(ref.i, T) : null;
   rows.forEach(({ r, host }) => {
     const i = r.i, H = narrow ? 48 : 40, mid = narrow ? 14 : 20, svg = svgIn(host, W, H);
@@ -427,6 +471,8 @@ function renderTable() {
     ["g", "Pasos (y puesto en ese punto)"],
     ...CP.map((k, j) => [`Km ${[5, 10, 15][j]}`, i => [C[k][i] ? `${hms(C[k][i])} (${n0(rankCP[k][i])}º)` : "–", C[k][i] || null]]),
     ["Meta", i => [valid(i) ? `${hms(C.t[i])} (${n0(rankAll[i])}º)` : "–", C.t[i] || null]],
+    ["g", "Paso estimado por los altos"],
+    ...ALTOS.map(a => [`${a.n} (km ${km1(a.km)})`, i => { const t = timeAtKm(i, a.km); return t ? [hms(t), t] : ["–", null]; }]),
     ...(ref && R.length > 1 ? [["g", `Diferencia con ${first(ref.i)}`], ...["Km 5", "Km 10", "Km 15", "Meta"].map((l, j) => [l, i => { const a = cpTimes(i)[j], b = cpTimes(ref.i)[j]; return a && b ? [i === ref.i ? "–" : signed(a - b), null] : ["–", null]; }])] : []),
     ["g", "Ritmo por tramo"],
     ...["Salida a km 5", "Km 5 a 10", "Km 10 a 15", "Km 15 a meta"].map((l, j) => [l, i => { const s = segs(i); return s ? [ms(s[j] / 5) + " min/km", s[j]] : ["–", null]; }]),
@@ -447,7 +493,7 @@ function renderTable() {
 const SEGX = ["Salida a km 5", "Km 5 a 10", "Km 10 a 15", "Km 15 a meta"], SEGS = ["0–5", "5–10", "10–15", "15–20"];
 function renderPace() {
   const host = $("pace"), W = widthOf(host), H = 300, m = { l: 48, r: 84, t: 22, b: 34 };
-  const svg = svgIn(host, W, H), rel = paceMode === "rel";
+  const svg = svgIn(host, W, H + 18), rel = paceMode === "rel";
   const val = i => { const s = segs(i); return s && s.map(v => rel ? v / (C.t[i] / 4) - 1 : v / 5); };
   const ref = rel ? REF.rel : REF.abs, series = sel.map(r => ({ r, v: val(r.i) })).filter(s => s.v);
   const all = series.flatMap(s => s.v).concat(ref);
@@ -455,7 +501,7 @@ function renderPace() {
   const x = k => m.l + (k + .5) / 4 * (W - m.l - m.r), y = v => m.t + (v - lo) / (hi - lo) * (H - m.t - m.b);
   (rel ? niceTicks(lo, hi, 5) : stepTicks(lo, hi, [5, 10, 15, 30, 60, 120], 6)).forEach(v => { el("line", { x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), class: "grid" }, svg); el("text", { x: m.l - 8, y: y(v) + 4, "text-anchor": "end", text: rel ? (v > 0 ? "+" : v < 0 ? "−" : "") + pct(Math.abs(v)) : ms(v) }, svg); });
   el("text", { x: m.l, y: 8, text: "↑ más rápido" }, svg);
-  (W < 520 ? SEGS : SEGX).forEach((l, k) => el("text", { x: x(k), y: H - m.b + 22, "text-anchor": "middle", class: "lbl", text: l }, svg));
+  (W < 520 ? SEGS : SEGX).forEach((l, k) => { el("text", { x: x(k), y: H - m.b + 22, "text-anchor": "middle", class: "lbl", text: l }, svg); const [u, dn] = gainLoss(k * 5, k * 5 + 5); el("text", { x: x(k), y: H - m.b + 40, "text-anchor": "middle", text: `+${Math.round(u)} m / −${Math.round(dn)} m` }, svg); });
   const line = (v, c) => el("path", { d: v.map((p, k) => (k ? "L" : "M") + x(k) + "," + y(p)).join(""), style: `fill:none;stroke:${c};stroke-width:2;stroke-linejoin:round;stroke-linecap:round` }, svg);
   line(ref, "var(--ink-3)");
   series.forEach(s => { line(s.v, col(s.r)); s.v.forEach((p, k) => el("circle", { cx: x(k), cy: y(p), r: 4, style: `fill:${col(s.r)};stroke:var(--bg);stroke-width:2` }, svg)); });
@@ -466,7 +512,7 @@ function renderPace() {
   const f = v => rel ? `${v > 0 ? "+" : v < 0 ? "−" : ""}${pct(Math.abs(v), 1)}` : ms(v) + " min/km";
   for (let k = 0; k < 4; k++) {
     const hit = el("rect", { x: x(k) - (W - m.l - m.r) / 8, y: m.t, width: (W - m.l - m.r) / 4, height: H - m.t - m.b, fill: "transparent" }, svg);
-    hover(hit, () => `<div class="t">${SEGX[k]}</div>` + series.map(s => row(first(s.r.i), f(s.v[k]), col(s.r))).join("") + row("Mediana", f(ref[k]), "var(--ink-3)"));
+    hover(hit, () => `<div class="t">${SEGX[k]} · +${Math.round(gainLoss(k * 5, k * 5 + 5)[0])} m</div>` + series.map(s => row(first(s.r.i), f(s.v[k]), col(s.r))).join("") + row("Mediana", f(ref[k]), "var(--ink-3)"));
   }
 }
 document.querySelectorAll("#pace-mode button").forEach(b => b.onclick = () => { paceMode = b.dataset.v; document.querySelectorAll("#pace-mode button").forEach(x => x.setAttribute("aria-pressed", x === b)); renderPace(); });
@@ -506,11 +552,7 @@ function renderDist() {
 // ---------- dirección y arranque ----------
 function writeHash() { const h = sel.map(r => C.d[r.i]).join(","); history.replaceState(null, "", h && !isExample ? "#d=" + h : location.pathname + location.search); }
 // ---------- guardar como imagen (para mandarla por WhatsApp) ----------
-function roadCaption(ref) {
-  if (!ref) return "Nadie de la comparación tiene tiempo válido.";
-  const rt = cpTimes(ref.i), at = rt.findIndex(t => t === Math.round(T)), n = first(ref.i);
-  return at >= 0 ? `Así iban cuando ${n} ${at === 3 ? "cruzó la meta" : "pasó por el km " + [5, 10, 15][at]}, a ${hms(T)} de carrera.` : `Así iban a ${hms(T)} de carrera.`;
-}
+
 async function saveImage() {
   const btn = $("save-img"), msg = $("save-msg");
   btn.disabled = true; msg.textContent = "Preparando la imagen…";
@@ -520,7 +562,7 @@ async function saveImage() {
     const K = { bg: css("--bg"), ink: css("--ink"), ink2: css("--ink-2"), ink3: css("--ink-3"), rule: css("--rule"), asphalt: css("--asphalt"), paint: css("--paint") };
     const runColor = r => css(`--r${r.slot + 1}`);
     const W = 1080, P = 56, laneH = 128, tblRow = 46, ref = refRunner();
-    const H = P + 150 + 40 + sel.length * laneH + 40 + 50 + sel.length * tblRow + 140;
+    const H = P + 150 + 40 + 240 + sel.length * laneH + 40 + 50 + sel.length * tblRow + 140;
     const cv = document.createElement("canvas"), S = 2; cv.width = W * S; cv.height = H * S;
     const g = cv.getContext("2d"); g.scale(S, S);
     const font = (w, px, cond) => { g.font = `${w} ${px}px Archivo, system-ui, sans-serif`; if ("fontStretch" in g) g.fontStretch = cond ? "condensed" : "normal"; };
@@ -529,13 +571,23 @@ async function saveImage() {
     g.fillStyle = K.bg; g.fillRect(0, 0, W, H); g.textBaseline = "alphabetic";
     let y = P + 50;
     font(800, 58, true); text("Behobia – San Sebastián 2026", P, y, K.ink);
-    y += 44; font(400, 24); text(fit(roadCaption(ref), W - 2 * P), P, y, K.ink2);
+    font(400, 24); const words = roadCaption(ref).split(" "), lines = [""];
+    for (const w of words) { const t = (lines[lines.length - 1] + " " + w).trim(); if (g.measureText(t).width > W - 2 * P && lines[lines.length - 1]) lines.push(w); else lines[lines.length - 1] = t; }
+    lines.slice(0, 2).forEach((l, k) => { y += k ? 32 : 44; text(l, P, y, K.ink2); });
     y += 30; font(400, 20); text("Tiempo neto: como si todos hubieran salido a la vez.", P, y, K.ink3);
     // eje
     const rx0 = P, rx1 = W - P - 230, X = k => rx0 + k / 20 * (rx1 - rx0);
-    y += 56; font(500, 18);
+    // perfil con los corredores
+    y += 40; const pTop = y + 50, pBase = y + 210, EY = e => pBase - e / 90 * (pBase - pTop);
+    g.strokeStyle = K.rule; g.lineWidth = 1; font(400, 16);
+    [20, 40, 60, 80].forEach(e => { g.beginPath(); g.moveTo(X(0), EY(e)); g.lineTo(X(20), EY(e)); g.stroke(); text(`${e} m`, X(20) + 10, EY(e) + 5, K.ink3); });
+    g.fillStyle = K.asphalt; g.beginPath(); g.moveTo(X(0), pBase); for (let k = 0; k <= 200; k++) g.lineTo(X(k / 10), EY(PROFILE[k])); g.lineTo(X(20), pBase); g.closePath(); g.fill();
+    g.strokeStyle = K.paint; g.globalAlpha = .6; g.lineWidth = 2.5; [5, 10, 15].forEach(k => { g.beginPath(); g.moveTo(X(k), EY(elevAt(k))); g.lineTo(X(k), pBase); g.stroke(); }); g.globalAlpha = 1;
+    font(650, 18); ALTOS.forEach(a => text(`${a.n} · ${Math.round(elevAt(a.km))} m`, X(a.km), EY(elevAt(a.km)) - 22, K.ink, "center"));
+    [...sel].sort((a, b) => b.slot - a.slot).forEach(r => { const km = kmAt(r.i, T); if (km == null) return; g.fillStyle = runColor(r); g.strokeStyle = K.bg; g.lineWidth = 3; g.beginPath(); g.arc(X(km), EY(elevAt(km)), 10, 0, Math.PI * 2); g.fill(); g.stroke(); });
+    y = pBase + 26; font(500, 18);
     [[0, "Behobia"], [5, "km 5"], [10, "km 10"], [15, "km 15"], [20, "Donostia"]].forEach(([k, l]) => text(l, X(k), y, k % 20 ? K.ink3 : K.ink2, k === 0 ? "left" : "center"));
-    y += 14;
+    y += 20;
     const refKm = ref ? kmAt(ref.i, T) : null;
     font(800, 32, true); const nx = P + 28 + Math.max(...sel.map(r => g.measureText(String(C.d[r.i])).width)) + 22;
     for (const r of sel) {
