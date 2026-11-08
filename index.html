@@ -541,7 +541,7 @@ function renderTable() {
 const SEGX = ["Salida a km 5", "Km 5 a 10", "Km 10 a 15", "Km 15 a meta"], SEGS = ["0–5", "5–10", "10–15", "15–20"];
 function renderPace() {
   const host = $("pace"), W = widthOf(host), H = 300, m = { l: 48, r: 84, t: 22, b: 34 };
-  const svg = svgIn(host, W, H + 18), rel = paceMode === "rel";
+  const svg = svgIn(host, W, H + (W < 620 ? 34 : 18)), rel = paceMode === "rel";
   const val = i => { const s = segs(i); return s && s.map(v => rel ? v / (C.t[i] / 4) - 1 : v / 5); };
   const ref = rel ? REF.rel : REF.abs, series = sel.map(r => ({ r, v: val(r.i) })).filter(s => s.v);
   const all = series.flatMap(s => s.v).concat(ref);
@@ -549,7 +549,9 @@ function renderPace() {
   const x = k => m.l + (k + .5) / 4 * (W - m.l - m.r), y = v => m.t + (v - lo) / (hi - lo) * (H - m.t - m.b);
   (rel ? niceTicks(lo, hi, 5) : stepTicks(lo, hi, [5, 10, 15, 30, 60, 120], 6)).forEach(v => { el("line", { x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), class: "grid" }, svg); el("text", { x: m.l - 8, y: y(v) + 4, "text-anchor": "end", text: rel ? (v > 0 ? "+" : v < 0 ? "−" : "") + pct(Math.abs(v)) : ms(v) }, svg); });
   el("text", { x: m.l, y: 8, text: "↑ más rápido" }, svg);
-  (W < 520 ? SEGS : SEGX).forEach((l, k) => { el("text", { x: x(k), y: H - m.b + 22, "text-anchor": "middle", class: "lbl", text: l }, svg); const [u, dn] = gainLoss(k * 5, k * 5 + 5); el("text", { x: x(k), y: H - m.b + 40, "text-anchor": "middle", text: `+${Math.round(u)} m / −${Math.round(dn)} m` }, svg); });
+  (W < 520 ? SEGS : SEGX).forEach((l, k) => { el("text", { x: x(k), y: H - m.b + 22, "text-anchor": "middle", class: "lbl", text: l }, svg); const [u, dn] = gainLoss(k * 5, k * 5 + 5);
+    if (W < 620) { el("text", { x: x(k), y: H - m.b + 40, "text-anchor": "middle", text: `+${Math.round(u)} m` }, svg); el("text", { x: x(k), y: H - m.b + 56, "text-anchor": "middle", text: `−${Math.round(dn)} m` }, svg); }
+    else el("text", { x: x(k), y: H - m.b + 40, "text-anchor": "middle", text: `+${Math.round(u)} m / −${Math.round(dn)} m` }, svg); });
   const line = (v, c) => el("path", { d: v.map((p, k) => (k ? "L" : "M") + x(k) + "," + y(p)).join(""), style: `fill:none;stroke:${c};stroke-width:2;stroke-linejoin:round;stroke-linecap:round` }, svg);
   line(ref, "var(--ink-3)");
   series.forEach(s => { line(s.v, col(s.r)); s.v.forEach((p, k) => el("circle", { cx: x(k), cy: y(p), r: 4, style: `fill:${col(s.r)};stroke:var(--bg);stroke-width:2` }, svg)); });
