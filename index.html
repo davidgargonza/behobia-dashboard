@@ -744,6 +744,7 @@ async function storyBlob() {
   const fit = (t, max) => { if (g.measureText(t).width <= max) return t; while (t.length > 1 && g.measureText(t + "…").width > max) t = t.slice(0, -1); return t.trimEnd() + "…"; };
   const wrap = (t, max, n) => { const out = [""]; for (const w of t.split(" ")) { const c = (out[out.length - 1] + " " + w).trim(); if (g.measureText(c).width > max && out[out.length - 1]) out.push(w); else out[out.length - 1] = c; } return out.slice(0, n); };
   g.fillStyle = K.bg; g.fillRect(0, 0, W, H); g.textBaseline = "alphabetic";
+  if (sel.length === 1) { storyOne(g, K, W, P, font, text, fit, css(`--r${sel[0].slot + 1}`)); return new Promise(res => cv.toBlob(res, "image/png")); }
   let y = 330;
   font(800, 104, true); text("Behobia –", P, y, K.ink); y += 96; text("San Sebastián 2026", P, y, K.ink);
   y += 16; font(400, 34); wrap(roadCaption(ref), W - 2 * P, 3).forEach(l => { y += 48; text(l, P, y, K.ink2); });
@@ -773,6 +774,56 @@ async function storyBlob() {
   font(500, 28); text("davidgargonza.github.io/behobia-dashboard", P, fy, K.ink);
   font(400, 22); text("Tiempo neto · clasificación provisional del 8 de noviembre de 2026", P, fy + 36, K.ink3);
   return new Promise(res => cv.toBlob(res, "image/png"));
+}
+// ficha de un solo corredor: lo más importante de su carrera en una pantalla
+function storyOne(g, K, W, P, font, text, fit, c) {
+  const i = sel[0].i, ok = valid(i), sp = segs(i), catTot = cntG[C.g[i] + "|" + C.s[i]];
+  const rule = y => { g.fillStyle = K.rule; g.fillRect(P, y, W - 2 * P, 2); };
+  const label = (t, y) => { font(650, 30, true); text(t, P, y, K.ink); };
+  // cabecera
+  font(600, 30, true); text("Behobia – San Sebastián 2026", P, 290, K.ink2);
+  g.fillStyle = c; g.fillRect(P, 318, 30, 30);
+  font(800, 64, true); text(fit(title(C.n[i]), W - 2 * P - 46), P + 46, 350, K.ink);
+  font(400, 28); text(fit(`Dorsal ${C.d[i]} · ${title(GCATS[C.g[i]])} · ${title(TOWNS[C.o[i]])}`, W - 2 * P), P, 396, K.ink2);
+  if (!ok) { font(700, 120, true); text("Sin tiempo válido", P, 600, K.ink); font(400, 28); text("No figura con tiempo en la clasificación provisional.", P, 650, K.ink2); return footer(1650); }
+  // tiempo y puestos
+  font(800, 190, true); text(hms(C.t[i]), P - 6, 590, K.ink); const tw = g.measureText(hms(C.t[i])).width;
+  font(400, 30); text(`${ms(C.t[i] / KM)} min/km · por delante del ${(b => pct(b, b > .99 && b < 1 ? 1 : 0))(better(rankAll[i], order.length))} de la carrera`, P, 640, K.ink2);
+  const sx = Math.max(P + tw + 40, 640);
+  [[n0(rankAll[i]), `de ${n0(order.length)}, general`], [n0(rankSex[i]), `de ${n0(cntSex[C.s[i]])}, ${C.s[i] ? "mujeres" : "hombres"}`], [n0(rankCat[i]), `de ${n0(catTot)}, ${title(GCATS[C.g[i]])}`]].forEach(([v, l], k) => {
+    const yy = 460 + k * 62; font(750, 46, true); text(v + "º", sx, yy, K.ink); const vw = g.measureText(v + "º").width; font(400, 24); text(fit(l, W - P - sx - vw - 12), sx + vw + 12, yy, K.ink2);
+  });
+  // perfil con su ritmo por tramo y su paso estimado por los altos
+  rule(684);
+  const X = k => P + k / 20 * (W - 2 * P), pTop = 770, pBase = 930, EY = e => pBase - e / 90 * (pBase - pTop);
+  g.fillStyle = K.asphalt; g.beginPath(); g.moveTo(X(0), pBase); for (let k = 0; k <= 200; k++) g.lineTo(X(k / 10), EY(PROFILE[k])); g.lineTo(X(20), pBase); g.closePath(); g.fill();
+  g.strokeStyle = K.paint; g.globalAlpha = .6; g.lineWidth = 3; [5, 10, 15].forEach(k => { g.beginPath(); g.moveTo(X(k), EY(elevAt(k))); g.lineTo(X(k), pBase); g.stroke(); }); g.globalAlpha = 1;
+  ALTOS.forEach(a => { const t = timeAtKm(i, a.km); font(650, 24); text(a.n, X(a.km), EY(elevAt(a.km)) - 40, K.ink, "center"); font(400, 22); text(hms(t), X(a.km), EY(elevAt(a.km)) - 14, K.ink2, "center"); });
+  font(400, 22); text("Ritmo por tramo", P, 968, K.ink3);
+  [0, 1, 2, 3].forEach(k => { const mid = X(k * 5 + 2.5); font(700, 34, true); text(sp ? ms(sp[k] / 5) : "–", mid, 1008, K.ink, "center"); font(400, 20); const [u, dn] = gainLoss(k * 5, k * 5 + 5); text(`+${Math.round(u)} / −${Math.round(dn)} m`, mid, 1036, K.ink3, "center"); });
+  // pasos y puesto en cada control
+  rule(1066); label("Pasos", 1112);
+  const cps = cpTimes(i), rks = [rankCP.t5[i], rankCP.t10[i], rankCP.t15[i], rankAll[i]];
+  ["Km 5", "Km 10", "Km 15", "Meta"].forEach((l, k) => { const x = P + k * (W - 2 * P) / 4; font(400, 22); text(l, x, 1152, K.ink3); font(650, 34, true); text(cps[k] ? hms(cps[k]) : "–", x, 1192, K.ink); font(400, 22); text(rks[k] ? `${n0(rks[k])}º` : "", x, 1222, K.ink2); });
+  // cuestas, frente a la mediana
+  rule(1250); label("En las cuestas", 1296);
+  CLIMBS.forEach((cl, ci) => {
+    const st = climbStats(i, ci), yy = 1340 + ci * 78; font(650, 26); text(cl.n, P, yy, K.ink);
+    if (!st) { font(400, 24); text("sin pasos intermedios", P + 240, yy, K.ink2); return; }
+    const sg = v => `${v >= 0 ? "+" : "−"}${Math.round(Math.abs(v))}`, g2 = st.gained;
+    font(400, 24); text(fit(`${sg(st.d)} s/km sobre su media (mediana ${sg(SLOWMED[ci])}) · ${g2 > 0 ? "ganó " + n0(g2) : g2 < 0 ? "perdió " + n0(-g2) : "mantuvo"} ${Math.abs(g2) === 1 ? "puesto" : "puestos"}`, W - 2 * P - 240), P + 240, yy, K.ink2);
+    const bx = P + 240, bw = W - P - bx, by = yy + 18; g.fillStyle = K.rule; g.fillRect(bx, by, bw, 10); g.fillStyle = c; g.fillRect(bx, by, bw * st.better, 10);
+    font(400, 20); text(`aguantó mejor que el ${pct(st.better)}`, P, by + 10, K.ink3);
+  });
+  // dónde queda entre todos
+  rule(1500); label("Entre todos los que llegaron", 1546);
+  const ts = order.map(j => C.t[j]), lo = Math.floor(ts[0] / 600) * 600, hi = Math.ceil(ts[Math.floor(ts.length * .999)] / 600) * 600, B = 60, nb = (hi - lo) / B, cnt = new Array(nb).fill(0);
+  for (const t of ts) { const b = Math.floor((t - lo) / B); if (b >= 0 && b < nb) cnt[b]++; }
+  const hx = t => P + (t - lo) / (hi - lo) * (W - 2 * P), hTop = 1562, hBase = 1622, mx = Math.max(...cnt);
+  g.fillStyle = K.ink3; g.globalAlpha = .35; g.beginPath(); g.moveTo(hx(lo), hBase); cnt.forEach((v, b) => g.lineTo(hx(lo + (b + .5) * B), hBase - v / mx * (hBase - hTop))); g.lineTo(hx(hi), hBase); g.closePath(); g.fill(); g.globalAlpha = 1;
+  g.fillStyle = c; g.fillRect(hx(C.t[i]) - 2, hTop - 6, 4, hBase - hTop + 6);
+  footer(1666);
+  function footer(y) { font(500, 24); text("davidgargonza.github.io/behobia-dashboard", P, y, K.ink); font(400, 20); text("Tiempo neto · provisional, 8/11/2026", W - P, y, K.ink3, "right"); }
 }
 $("share-ig").onclick = async () => {
   const btn = $("share-ig"), msg = $("save-msg"); btn.disabled = true; msg.textContent = "Preparando la historia…";
