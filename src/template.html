@@ -1,0 +1,855 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Behobia–San Sebastián 2026 · Dashboard de resultados</title>
+<style>
+:root {
+  color-scheme: light;
+  --page: #f9f9f7; --surface-1: #fcfcfb; --surface-2: #f3f2ef;
+  --text-primary: #0b0b0b; --text-secondary: #52514e; --text-muted: #898781;
+  --grid: #e1e0d9; --axis: #c3c2b7; --border: rgba(11,11,11,0.10);
+  --series-1: #2a78d6; --series-2: #eb6834; --series-3: #1baf7a;
+  --wash-1: rgba(42,120,214,0.10); --wash-2: rgba(235,104,52,0.10);
+  --div-neg: #2a78d6; --div-pos: #e34948; --div-mid: #f0efec;
+  --seq-1: #86b6ef; --seq-2: #6da7ec; --seq-3: #3987e5; --seq-4: #2a78d6; --seq-5: #1c5cab; --seq-6: #104281;
+  --accent-wash: rgba(42,120,214,0.08);
+}
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) {
+    color-scheme: dark;
+    --page: #0d0d0d; --surface-1: #1a1a19; --surface-2: #232321;
+    --text-primary: #f0efec; --text-secondary: #c3c2b7; --text-muted: #898781;
+    --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.10);
+    --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70;
+    --wash-1: rgba(57,135,229,0.14); --wash-2: rgba(217,89,38,0.14);
+    --div-neg: #3987e5; --div-pos: #e66767; --div-mid: #383835;
+    --seq-1: #184f95; --seq-2: #1c5cab; --seq-3: #2a78d6; --seq-4: #3987e5; --seq-5: #6da7ec; --seq-6: #9ec5f4;
+    --accent-wash: rgba(57,135,229,0.12);
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #0d0d0d; --surface-1: #1a1a19; --surface-2: #232321;
+  --text-primary: #f0efec; --text-secondary: #c3c2b7; --text-muted: #898781;
+  --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.10);
+  --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70;
+  --wash-1: rgba(57,135,229,0.14); --wash-2: rgba(217,89,38,0.14);
+  --div-neg: #3987e5; --div-pos: #e66767; --div-mid: #383835;
+  --seq-1: #184f95; --seq-2: #1c5cab; --seq-3: #2a78d6; --seq-4: #3987e5; --seq-5: #6da7ec; --seq-6: #9ec5f4;
+  --accent-wash: rgba(57,135,229,0.12);
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--page); color: var(--text-primary);
+  font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+.wrap { max-width: 1280px; margin: 0 auto; padding: 24px 20px 64px; }
+header.top { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
+h1 { font-size: 24px; margin: 0 0 4px; font-weight: 650; }
+h2 { font-size: 16px; margin: 0 0 2px; font-weight: 600; }
+h3 { font-size: 13px; margin: 0; font-weight: 600; }
+.sub { color: var(--text-secondary); margin: 0; }
+.muted { color: var(--text-muted); }
+.small { font-size: 12px; }
+button, select, input { font: inherit; color: inherit; }
+.btn { background: var(--surface-1); border: 1px solid var(--border); border-radius: 8px; padding: 6px 12px; cursor: pointer; }
+.btn:hover { background: var(--surface-2); }
+.seg { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.seg button { border: 0; background: var(--surface-1); padding: 5px 10px; cursor: pointer; color: var(--text-secondary); }
+.seg button + button { border-left: 1px solid var(--border); }
+.seg button.on { background: var(--surface-2); color: var(--text-primary); font-weight: 600; }
+
+.filters { position: sticky; top: 0; z-index: 5; background: var(--page); padding: 12px 0; margin: 16px 0 8px;
+  display: flex; flex-wrap: wrap; gap: 10px; align-items: end; border-bottom: 1px solid var(--grid); }
+.field { display: flex; flex-direction: column; gap: 3px; }
+.field label { font-size: 12px; color: var(--text-secondary); }
+.field input, .field select { background: var(--surface-1); border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; min-width: 120px; }
+.field input#q-name { min-width: 220px; }
+.filters .spacer { flex: 1; }
+
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin: 16px 0; }
+.tile { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; }
+.tile .label { font-size: 12px; color: var(--text-secondary); }
+.tile .value { font-size: 24px; font-weight: 600; margin-top: 2px; }
+.tile .hint { font-size: 12px; color: var(--text-muted); }
+.tile.hero .value { font-size: 48px; line-height: 1.05; }
+
+.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; padding: 16px; min-width: 0; }
+.card.wide { grid-column: 1 / -1; }
+.card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+.card-head p { margin: 0; color: var(--text-secondary); font-size: 13px; }
+@media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+
+.legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; color: var(--text-secondary); margin: 4px 0 6px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.sw { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+.sw.line { width: 14px; height: 2px; border-radius: 1px; }
+
+svg { display: block; width: 100%; height: auto; overflow: visible; }
+svg text { fill: var(--text-muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+svg text.lbl { fill: var(--text-secondary); font-size: 12px; font-variant-numeric: normal; }
+svg text.val { fill: var(--text-primary); font-size: 11px; }
+svg .gridline { stroke: var(--grid); stroke-width: 1; shape-rendering: crispEdges; }
+svg .baseline { stroke: var(--axis); stroke-width: 1; shape-rendering: crispEdges; }
+
+#tip { position: fixed; pointer-events: none; z-index: 50; background: var(--surface-1); color: var(--text-primary);
+  border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font-size: 12px; box-shadow: 0 4px 16px rgba(0,0,0,.12);
+  max-width: 280px; display: none; }
+#tip .t { font-weight: 600; margin-bottom: 4px; }
+#tip .r { display: flex; justify-content: space-between; gap: 14px; font-variant-numeric: tabular-nums; }
+#tip .r span:first-child { color: var(--text-secondary); display: inline-flex; align-items: center; gap: 6px; }
+
+.insights { margin: 0; padding-left: 18px; columns: 2; column-gap: 32px; }
+.insights li { margin: 0 0 6px; break-inside: avoid; }
+@media (max-width: 900px) { .insights { columns: 1; } }
+
+#runner { display: none; }
+#runner.show { display: block; }
+.runner-top { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; align-items: flex-start; }
+.runner-name { font-size: 20px; font-weight: 650; }
+.chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+.chip { background: var(--surface-2); border-radius: 999px; padding: 2px 10px; font-size: 12px; color: var(--text-secondary); }
+.rstats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin: 12px 0; }
+.rstats .tile { padding: 10px 12px; }
+.rstats .tile .value { font-size: 20px; }
+
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th, td { padding: 6px 8px; text-align: left; border-bottom: 1px solid var(--grid); white-space: nowrap; }
+th { font-weight: 600; color: var(--text-secondary); font-size: 12px; cursor: pointer; user-select: none; position: sticky; top: 0; background: var(--surface-1); }
+th.num, td.num { text-align: right; font-variant-numeric: tabular-nums; }
+tbody tr { cursor: pointer; }
+tbody tr:hover { background: var(--surface-2); }
+tbody tr.sel { background: var(--accent-wash); }
+.table-wrap { overflow-x: auto; }
+.pager { display: flex; gap: 8px; align-items: center; justify-content: flex-end; margin-top: 10px; font-size: 13px; }
+.note { font-size: 12px; color: var(--text-muted); margin-top: 24px; }
+.note p { margin: 4px 0; }
+a { color: var(--series-1); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>Behobia – San Sebastián 2026 · Resultados</h1>
+      <p class="sub">61ª edición · 8 de noviembre de 2026 · 20 km · <span id="src-note"></span></p>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn" id="share">Copiar enlace</button>
+      <button class="btn" id="theme" aria-label="Cambiar tema">Tema</button>
+    </div>
+  </header>
+
+  <div class="filters" role="search">
+    <div class="field"><label for="q-name">Nombre</label><input id="q-name" type="search" placeholder="Nombre o apellidos" autocomplete="off"></div>
+    <div class="field"><label for="q-dorsal">Dorsal</label><input id="q-dorsal" type="search" inputmode="numeric" placeholder="Ej. 1234" autocomplete="off" style="min-width:100px;width:110px"></div>
+    <div class="field"><label for="f-sex">Sexo</label><select id="f-sex"><option value="">Todos</option><option value="0">Hombres</option><option value="1">Mujeres</option></select></div>
+    <div class="field"><label for="f-cat">Categoría</label><select id="f-cat"></select></div>
+    <div class="field"><label for="f-ccaa">Procedencia (CCAA / país)</label><select id="f-ccaa"></select></div>
+    <div class="field"><label for="f-prov">Provincia</label><select id="f-prov"></select></div>
+    <div class="spacer"></div>
+    <button class="btn" id="reset">Limpiar filtros</button>
+  </div>
+  <p class="muted small" style="margin:0">Sexo, categoría y procedencia filtran todos los gráficos. Nombre y dorsal filtran la tabla; al elegir un corredor se marca en los gráficos.</p>
+
+  <section class="kpis" id="kpis"></section>
+
+  <section class="card wide" id="runner" style="margin-bottom:16px"></section>
+
+  <section class="card wide" style="margin-bottom:16px">
+    <div class="card-head"><div><h2>Conclusiones</h2><p>Se recalculan con los filtros activos</p></div></div>
+    <ul class="insights" id="insights"></ul>
+  </section>
+
+  <div class="grid">
+    <section class="card wide">
+      <div class="card-head">
+        <div><h2>Distribución de tiempos finales</h2><p>Corredores por intervalo de 2 minutos</p></div>
+        <div class="seg" id="hist-mode"><button data-v="n" class="on">Nº corredores</button><button data-v="pct">% del grupo</button></div>
+      </div>
+      <div class="legend" id="hist-legend"></div>
+      <div id="hist"></div>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><div><h2>Tiempos por categoría (edad)</h2><p>Categorías ordenadas de más joven a mayor. Punto = mediana · barra = 50% central · línea = 80% central</p></div></div>
+      <div class="legend" id="cat-legend"></div>
+      <div id="cat"></div>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><div><h2>Participación por edad y sexo</h2><p>Corredores con tiempo válido por categoría</p></div></div>
+      <div class="legend" id="pyr-legend"></div>
+      <div id="pyr"></div>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <div><h2>Procedencia</h2><p>Tiempos por comunidad / país (mín. 20 corredores), ordenado por participación</p></div>
+      </div>
+      <div id="ccaa"></div>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><div><h2>Municipios con más corredores</h2><p>Top 15 con los filtros actuales</p></div></div>
+      <div class="table-wrap"><table id="towns"></table></div>
+    </section>
+
+    <section class="card wide">
+      <div class="card-head">
+        <div><h2>Splits: ritmo por tramo</h2><p>Mediana del ritmo en cada tramo de 5 km, por grupo de tiempo final</p></div>
+        <div class="seg" id="pace-mode"><button data-v="abs" class="on">Ritmo (min/km)</button><button data-v="rel">% vs. su ritmo medio</button></div>
+      </div>
+      <div class="legend" id="pace-legend"></div>
+      <div id="pace"></div>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><div><h2>Segunda mitad vs. primera</h2><p>Diferencia entre los km 10–20 y los km 0–10. A la izquierda de 0 = split negativo</p></div></div>
+      <div id="split"></div>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><div><h2>Puestos ganados del km 5 a meta</h2><p>Cambio de posición en la general entre el km 5 y la meta</p></div></div>
+      <div id="gain"></div>
+    </section>
+
+    <section class="card wide">
+      <div class="card-head"><div><h2>Hora de salida y tiempo final</h2><p>Mediana del tiempo final por hora de cruce de la salida (tramos de 2 min) · banda = 50% central</p></div></div>
+      <div id="start"></div>
+    </section>
+
+    <section class="card wide">
+      <div class="card-head"><div><h2>Clasificación</h2><p id="table-count"></p></div>
+        <button class="btn" id="csv">Descargar CSV filtrado</button></div>
+      <div class="table-wrap"><table id="results"></table></div>
+      <div class="pager"><button class="btn" id="prev">‹ Anterior</button><span id="page-info"></span><button class="btn" id="next">Siguiente ›</button></div>
+    </section>
+  </div>
+
+  <div class="note">
+    <p><strong>Fuente:</strong> clasificacion.behobia-sansebastian.com · clasificación <em>provisional</em> en directo (pendiente de verificación por los jueces), descargada el 8/11/2026. Los tiempos son netos (desde el paso por la línea de salida).</p>
+    <p><strong>Limpieza:</strong> se excluyen de las estadísticas los registros sin tiempo, con tiempo 00:00:00 o sin hora de salida registrada; siguen apareciendo en la tabla. Los splits ausentes se ignoran en los cálculos de tramos.</p>
+    <p><strong>Edad:</strong> la clasificación no publica la edad; se usa la categoría oficial como franja de edad (de Junior a Veterano/a IV). Las categorías especiales (discapacidad, invidentes, apoyo) aparecen en el filtro pero no en el gráfico por edad.</p>
+    <p><strong>Procedencia:</strong> la web da sólo el municipio; la provincia y la comunidad se asignan cruzando el nombre con el listado de municipios del INE (≈95% identificados). Las coincidencias ambiguas o mal escritas quedan como «Sin identificar».</p>
+  </div>
+</div>
+<div id="tip"></div>
+
+<script>
+const RAW = /*__DATA__*/null;
+</script>
+<script>
+(() => {
+"use strict";
+// ---------- datos ----------
+const C = RAW.cols, N = C.d.length;
+const CATS = RAW.cats, GCATS = RAW.gcats, TOWNS = RAW.towns, PROVS = RAW.provs, CCAAS = RAW.ccaas;
+const AGE_CATS = 7; // índices 0..6 = Junior..Veterano/a IV
+const SEXN = ["Hombres", "Mujeres"], SEX1 = ["Hombre", "Mujer"];
+const KM = RAW.meta.distancia_km;
+const norm = s => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toUpperCase();
+const NAMEN = C.n.map(norm);
+const valid = i => C.t[i] > 0;
+const hasSplits = i => C.t5[i] > 0 && C.t10[i] > 0 && C.t15[i] > 0;
+
+// ranking por sexo y categoría (todos los válidos)
+const order = [...Array(N).keys()].filter(valid).sort((a, b) => C.t[a] - C.t[b]);
+const rankAll = new Int32Array(N), rankSex = new Int32Array(N), rankCat = new Int32Array(N);
+const cntSex = [0, 0], cntG = {};
+order.forEach((i, k) => {
+  rankAll[i] = k + 1;
+  rankSex[i] = ++cntSex[C.s[i]];
+  const g = C.g[i] + "|" + C.s[i];
+  rankCat[i] = cntG[g] = (cntG[g] || 0) + 1;
+});
+// posición relativa al km 5 (entre válidos con split)
+const rank5 = new Int32Array(N);
+[...order].filter(i => C.t5[i] > 0).sort((a, b) => C.t5[a] - C.t5[b]).forEach((i, k) => rank5[i] = k + 1);
+const rankFin5 = new Int32Array(N); // puesto en meta entre los que tienen split de km 5
+[...order].filter(i => C.t5[i] > 0).forEach((i, k) => rankFin5[i] = k + 1);
+
+// ---------- utilidades ----------
+const fmt = s => { if (!s) return "–"; s = Math.round(s); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = s % 60; return `${h}:${String(m).padStart(2, "0")}:${String(x).padStart(2, "0")}`; };
+const fmtM = s => { s = Math.round(s); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60); return `${h}:${String(m).padStart(2, "0")}`; };
+const pace = s => { s = Math.round(s); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`; };
+const clock = s => `${Math.floor(s / 3600)}:${String(Math.floor(s % 3600 / 60)).padStart(2, "0")}`;
+const nf = new Intl.NumberFormat("es-ES");
+const n0 = v => nf.format(Math.round(v));
+const pct = (v, d = 1) => (v * 100).toLocaleString("es-ES", { maximumFractionDigits: d, minimumFractionDigits: d }) + "%";
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const title = s => s.toLowerCase().replace(/(^|[\s\-(])([a-záéíóúñüç])/g, (m, a, b) => a + b.toUpperCase()).replace(/\b(Ii|Iii|Iv)\b/g, r => r.toUpperCase());
+function quant(sorted, q) { if (!sorted.length) return NaN; const p = (sorted.length - 1) * q, lo = Math.floor(p), hi = Math.ceil(p); return sorted[lo] + (sorted[hi] - sorted[lo]) * (p - lo); }
+const median = a => quant([...a].sort((x, y) => x - y), 0.5);
+function niceTicks(lo, hi, n = 5) {
+  const span = hi - lo, step0 = span / n, mag = 10 ** Math.floor(Math.log10(step0)), err = step0 / mag;
+  const step = (err >= 7.5 ? 10 : err >= 3.5 ? 5 : err >= 1.5 ? 2 : 1) * mag;
+  const out = []; for (let v = Math.ceil(lo / step) * step; v <= hi + 1e-9; v += step) out.push(+v.toFixed(10)); return out;
+}
+function timeTicks(lo, hi, n = 6) { // segundos -> múltiplos de 5/10/15/30 min
+  const steps = [300, 600, 900, 1800, 3600]; const step = steps.find(s => (hi - lo) / s <= n) || 3600;
+  const out = []; for (let v = Math.ceil(lo / step) * step; v <= hi; v += step) out.push(v); return out;
+}
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const SVGNS = "http://www.w3.org/2000/svg";
+function el(tag, attrs = {}, parent) {
+  const e = document.createElementNS(SVGNS, tag);
+  for (const k in attrs) { if (k === "text") e.textContent = attrs[k]; else if (k === "style") e.style.cssText = attrs[k]; else e.setAttribute(k, attrs[k]); }
+  if (parent) parent.appendChild(e); return e;
+}
+function svgIn(id, w, h) {
+  const host = document.getElementById(id); host.innerHTML = "";
+  const s = el("svg", { viewBox: `0 0 ${w} ${h}`, role: "img" }); host.appendChild(s); return s;
+}
+const widthOf = id => Math.max(320, Math.round(document.getElementById(id).clientWidth || 600));
+// barra horizontal con extremo redondeado (4px) y base recta
+function hbarPath(x0, x1, y, h, r = 4) {
+  const dir = x1 >= x0 ? 1 : -1, len = Math.abs(x1 - x0); r = Math.min(r, len, h / 2);
+  if (len < 0.5) return "";
+  const xe = x1 - dir * r;
+  return `M${x0},${y} H${xe} Q${x1},${y} ${x1},${y + r} V${y + h - r} Q${x1},${y + h} ${xe},${y + h} H${x0} Z`;
+}
+function vbarPath(x, w, y0, y1, r = 4) { // crece hacia arriba desde y0 hasta y1 (y1<y0) o hacia abajo
+  const dir = y1 <= y0 ? -1 : 1, len = Math.abs(y1 - y0); r = Math.min(r, len, w / 2);
+  if (len < 0.5) return "";
+  const ye = y1 - dir * r;
+  return `M${x},${y0} V${ye} Q${x},${y1} ${x + r},${y1} H${x + w - r} Q${x + w},${y1} ${x + w},${ye} V${y0} Z`;
+}
+
+// ---------- tooltip ----------
+const tip = document.getElementById("tip");
+function showTip(ev, html) { tip.innerHTML = html; tip.style.display = "block"; moveTip(ev); }
+function moveTip(ev) {
+  const r = tip.getBoundingClientRect(); let x = ev.clientX + 14, y = ev.clientY + 14;
+  if (x + r.width > innerWidth - 8) x = ev.clientX - r.width - 14;
+  if (y + r.height > innerHeight - 8) y = ev.clientY - r.height - 14;
+  tip.style.left = x + "px"; tip.style.top = y + "px";
+}
+const hideTip = () => tip.style.display = "none";
+const row = (k, v, sw) => `<div class="r"><span>${sw ? `<i class="sw" style="background:${sw}"></i>` : ""}${k}</span><span>${v}</span></div>`;
+function hover(node, fn) {
+  node.addEventListener("mousemove", ev => { const h = fn(ev); if (h) showTip(ev, h); else hideTip(); });
+  node.addEventListener("mouseleave", hideTip);
+}
+
+// ---------- estado ----------
+const state = { name: "", dorsal: "", sex: "", cat: "", ccaa: "", prov: "", sel: -1, sort: "pos", dir: 1, page: 0, histMode: "n", paceMode: "abs" };
+const $ = id => document.getElementById(id);
+
+function fillSelect(id, items, all) {
+  $(id).innerHTML = `<option value="">${all}</option>` + items.map(([v, l]) => `<option value="${v}">${esc(l)}</option>`).join("");
+}
+function countBy(key) { const m = {}; for (let i = 0; i < N; i++) m[C[key][i]] = (m[C[key][i]] || 0) + 1; return m; }
+const ccaaCount = countBy("a"), provCount = countBy("p");
+fillSelect("f-cat", [
+  ...CATS.slice(0, AGE_CATS).map((c, i) => ["c" + i, title(c)]),
+  ...GCATS.map((g, i) => ["g" + i, title(g)]),
+], "Todas");
+// separador visual entre agrupadas y oficiales
+$("f-cat").insertBefore(Object.assign(document.createElement("option"), { disabled: true, textContent: "── categoría oficial ──" }), $("f-cat").options[AGE_CATS + 1]);
+fillSelect("f-ccaa", Object.keys(ccaaCount).sort((a, b) => ccaaCount[b] - ccaaCount[a]).map(k => [k, `${CCAAS[k]} (${n0(ccaaCount[k])})`]), "Todas");
+// mapa provincia->ccaa para refrescar rápido
+const provCcaa = {}; for (let i = 0; i < N; i++) provCcaa[C.p[i]] = C.a[i];
+function refreshProv() {
+  const keys = Object.keys(provCount).filter(k => state.ccaa === "" || provCcaa[k] == state.ccaa);
+  fillSelect("f-prov", keys.sort((a, b) => provCount[b] - provCount[a]).map(k => [k, `${PROVS[k]} (${n0(provCount[k])})`]), "Todas");
+  if (!keys.includes(state.prov)) state.prov = "";
+  $("f-prov").value = state.prov;
+};
+
+function passGroup(i) { // filtros de grupo (gráficos)
+  if (state.sex !== "" && C.s[i] != state.sex) return false;
+  if (state.cat !== "") { const t = state.cat[0], v = +state.cat.slice(1); if (t === "c" ? C.c[i] !== v : C.g[i] !== v) return false; }
+  if (state.ccaa !== "" && C.a[i] != state.ccaa) return false;
+  if (state.prov !== "" && C.p[i] != state.prov) return false;
+  return true;
+}
+function passSearch(i) {
+  if (state.dorsal && !String(C.d[i]).startsWith(state.dorsal)) return false;
+  if (state.name) { const toks = norm(state.name).split(/\s+/).filter(Boolean); const n = NAMEN[i]; for (const t of toks) if (!n.includes(t)) return false; }
+  return true;
+}
+
+// ---------- render ----------
+let G = [];      // índices del grupo con tiempo válido
+let GALL = [];   // índices del grupo (incluye sin tiempo)
+function render() {
+  GALL = []; G = [];
+  for (let i = 0; i < N; i++) if (passGroup(i)) { GALL.push(i); if (valid(i)) G.push(i); }
+  writeHash();
+  renderKpis(); renderRunner(); renderInsights(); renderHist(); renderCat(); renderPyr(); renderCcaa(); renderTowns();
+  renderPace(); renderSplit(); renderGain(); renderStart(); renderTable();
+}
+
+function renderKpis() {
+  const ts = G.map(i => C.t[i]).sort((a, b) => a - b);
+  const women = G.filter(i => C.s[i] === 1).length;
+  const best = s => { let b = null; for (const i of G) if (C.s[i] === s && (b === null || C.t[i] < C.t[b])) b = i; return b; };
+  const bm = best(0), bw = best(1);
+  const sp = G.filter(hasSplits), neg = sp.filter(i => C.t[i] - C.t10[i] < C.t10[i]).length;
+  const tiles = [
+    ["hero", "Corredores con tiempo", n0(G.length), `${n0(GALL.length - G.length)} sin tiempo válido`],
+    ["", "Tiempo mediano", ts.length ? fmt(quant(ts, .5)) : "–", ts.length ? `ritmo ${pace(quant(ts, .5) / KM)} min/km` : ""],
+    ["", "50% central", ts.length ? `${fmtM(quant(ts, .25))}–${fmtM(quant(ts, .75))}` : "–", "percentiles 25–75"],
+    ["", "Mujeres", G.length ? pct(women / G.length) : "–", `${n0(women)} corredoras`],
+    ["", "Más rápido", bm != null ? fmt(C.t[bm]) : "–", bm != null ? title(C.n[bm]) : ""],
+    ["", "Más rápida", bw != null ? fmt(C.t[bw]) : "–", bw != null ? title(C.n[bw]) : ""],
+    ["", "Split negativo", sp.length ? pct(neg / sp.length) : "–", "2ª mitad más rápida que la 1ª"],
+  ];
+  $("kpis").innerHTML = tiles.map(([c, l, v, h]) => `<div class="tile ${c}"><div class="label">${l}</div><div class="value">${v}</div><div class="hint">${esc(h)}</div></div>`).join("");
+}
+
+// ---------- ficha de corredor ----------
+function groupMedianSplits(filterFn) {
+  const segs = [[], [], [], []];
+  for (const i of order) if (filterFn(i) && hasSplits(i)) {
+    segs[0].push(C.t5[i]); segs[1].push(C.t10[i] - C.t5[i]); segs[2].push(C.t15[i] - C.t10[i]); segs[3].push(C.t[i] - C.t15[i]);
+  }
+  return segs.map(median);
+}
+function renderRunner() {
+  const box = $("runner"), i = state.sel;
+  if (i < 0) { box.classList.remove("show"); box.innerHTML = ""; return; }
+  box.classList.add("show");
+  const ok = valid(i);
+  const sexTot = cntSex[C.s[i]], catKey = C.g[i] + "|" + C.s[i], catTot = cntG[catKey] || 0;
+  const better = r => r ? pct(1 - (r - 1) / Math.max(1, (r === rankAll[i] ? order.length : r === rankSex[i] ? sexTot : catTot) - 1), 0) : "";
+  const pctOf = (r, tot) => tot > 1 ? Math.round(100 * (tot - r) / (tot - 1)) : 100;
+  let stats = "";
+  if (ok) {
+    const pos5 = rank5[i], posF = rankFin5[i];
+    const gained = pos5 && posF ? pos5 - posF : null;
+    stats = `<div class="rstats">
+      <div class="tile"><div class="label">Tiempo</div><div class="value">${fmt(C.t[i])}</div><div class="hint">${pace(C.t[i] / KM)} min/km</div></div>
+      <div class="tile"><div class="label">Puesto general</div><div class="value">${n0(rankAll[i])}<span class="muted small"> / ${n0(order.length)}</span></div><div class="hint">mejor que el ${pctOf(rankAll[i], order.length)}%</div></div>
+      <div class="tile"><div class="label">Puesto ${SEXN[C.s[i]].toLowerCase()}</div><div class="value">${n0(rankSex[i])}<span class="muted small"> / ${n0(sexTot)}</span></div><div class="hint">mejor que el ${pctOf(rankSex[i], sexTot)}%</div></div>
+      <div class="tile"><div class="label">Puesto ${esc(title(GCATS[C.g[i]]))}</div><div class="value">${n0(rankCat[i])}<span class="muted small"> / ${n0(catTot)}</span></div><div class="hint">mejor que el ${pctOf(rankCat[i], catTot)}%</div></div>
+      <div class="tile"><div class="label">Puestos km 5 → meta</div><div class="value">${gained == null ? "–" : (gained > 0 ? "+" : "") + n0(gained)}</div><div class="hint">${gained == null ? "sin split de km 5" : gained >= 0 ? "puestos ganados" : "puestos perdidos"}</div></div>
+      <div class="tile"><div class="label">Hora de salida</div><div class="value">${C.st[i] ? fmt(C.st[i]) : "–"}</div><div class="hint">cruce de la línea de salida</div></div>
+    </div>`;
+  }
+  const splits = ok && hasSplits(i) ? (() => {
+    const mine = [C.t5[i], C.t10[i] - C.t5[i], C.t15[i] - C.t10[i], C.t[i] - C.t15[i]];
+    const g = C.g[i], s = C.s[i];
+    const med = groupMedianSplits(j => C.g[j] === g && C.s[j] === s);
+    const labels = ["Salida–km 5", "km 5–10", "km 10–15", "km 15–meta"];
+    return `<table style="max-width:640px"><thead><tr><th>Tramo</th><th class="num">Tiempo</th><th class="num">Ritmo</th><th class="num">Mediana de su categoría</th><th class="num">Diferencia</th></tr></thead><tbody>${
+      mine.map((m, k) => `<tr style="cursor:default"><td>${labels[k]}</td><td class="num">${fmt(m)}</td><td class="num">${pace(m / 5)}/km</td><td class="num">${pace(med[k] / 5)}/km</td><td class="num">${m - med[k] <= 0 ? "−" : "+"}${pace(Math.abs(m - med[k]))}</td></tr>`).join("")}</tbody></table>`;
+  })() : `<p class="muted">${ok ? "Sin splits intermedios completos." : "Sin tiempo final válido en la clasificación provisional."}</p>`;
+  box.innerHTML = `<div class="runner-top"><div>
+      <div class="muted small">Corredor seleccionado · aparece marcado en los gráficos</div>
+      <div class="runner-name">${esc(title(C.n[i]))}</div>
+      <div class="chips"><span class="chip">Dorsal ${C.d[i]}</span><span class="chip">${SEX1[C.s[i]]}</span><span class="chip">${esc(title(GCATS[C.g[i]]))}</span><span class="chip">${esc(title(TOWNS[C.o[i]]))} · ${esc(PROVS[C.p[i]])}</span></div>
+    </div><button class="btn" id="unsel">Quitar selección</button></div>${stats}${splits}`;
+  $("unsel").onclick = () => { state.sel = -1; render(); };
+}
+
+// ---------- conclusiones ----------
+function renderInsights() {
+  const out = [];
+  const med = arr => median(arr.map(i => C.t[i]));
+  const bySex = [0, 1].map(s => G.filter(i => C.s[i] === s));
+  if (bySex[0].length > 30 && bySex[1].length > 30) {
+    const mm = med(bySex[0]), mw = med(bySex[1]);
+    out.push(`Las mujeres tienen un tiempo mediano de <b>${fmt(mw)}</b> frente a <b>${fmt(mm)}</b> de los hombres: <b>${fmtM(Math.abs(mw - mm)).replace(/^0:/, "")} min</b> ${mw > mm ? "más" : "menos"} (${pct(Math.abs(mw / mm - 1))}).`);
+  }
+  const catMed = [];
+  for (let c = 0; c < AGE_CATS; c++) { const a = G.filter(i => C.c[i] === c); if (a.length >= 30) catMed.push([c, med(a), a.length]); }
+  if (catMed.length > 2) {
+    const fast = catMed.reduce((a, b) => b[1] < a[1] ? b : a), slow = catMed.reduce((a, b) => b[1] > a[1] ? b : a);
+    out.push(`Por edad, la categoría más rápida en mediana es <b>${title(CATS[fast[0]])}</b> (${fmt(fast[1])}) y la más lenta <b>${title(CATS[slow[0]])}</b> (${fmt(slow[1])}).`);
+    const big = catMed.reduce((a, b) => b[2] > a[2] ? b : a);
+    out.push(`La franja con más participantes es <b>${title(CATS[big[0]])}</b>: ${pct(big[2] / G.length, 0)} de los corredores.`);
+  }
+  const sp = G.filter(hasSplits);
+  if (sp.length > 50) {
+    const segs = groupMedianSplits(i => passGroup(i));
+    const lab = ["la salida–km 5", "el km 5–10", "el km 10–15", "el km 15–meta"];
+    const slow = segs.indexOf(Math.max(...segs)), fast = segs.indexOf(Math.min(...segs));
+    out.push(`El tramo más lento en mediana es <b>${lab[slow]}</b> (${pace(segs[slow] / 5)}/km) y el más rápido <b>${lab[fast]}</b> (${pace(segs[fast] / 5)}/km).`);
+    const neg = sp.filter(i => C.t[i] - C.t10[i] < C.t10[i]).length;
+    out.push(`Sólo el <b>${pct(neg / sp.length)}</b> hizo la segunda mitad más rápida que la primera; la mediana de la 2ª mitad es un ${pct(median(sp.map(i => (C.t[i] - 2 * C.t10[i]) / C.t10[i])))} más lenta.`);
+    const top = sp.filter(i => rankAll[i] <= order.length * 0.1), bot = sp.filter(i => rankAll[i] > order.length * 0.9);
+    if (top.length > 20 && bot.length > 20) {
+      const r = a => median(a.map(i => (C.t[i] - 2 * C.t10[i]) / C.t10[i]));
+      out.push(`El 10% más rápido reparte mejor el esfuerzo: su 2ª mitad es un ${pct(r(top))} más lenta, frente al ${pct(r(bot))} del 10% más lento.`);
+    }
+  }
+  const g5 = G.filter(i => rank5[i] && rankFin5[i]);
+  if (g5.length > 50) {
+    const gains = g5.map(i => rank5[i] - rankFin5[i]);
+    const up = gains.filter(g => g > 0).length;
+    out.push(`Del km 5 a meta, el <b>${pct(up / g5.length, 0)}</b> ganó puestos; la mitad se movió menos de ${n0(median(gains.map(Math.abs)))} posiciones.`);
+  }
+  const early = G.filter(i => C.st[i] && C.st[i] < 10 * 3600 + 15 * 60), late = G.filter(i => C.st[i] >= 11 * 3600);
+  if (early.length > 30 && late.length > 30)
+    out.push(`Quienes cruzaron la salida antes de las 10:15 marcaron una mediana de <b>${fmt(med(early))}</b>; los que salieron después de las 11:00, <b>${fmt(med(late))}</b>: los cajones están ordenados por marca.`);
+  const ccaaMed = {}; for (const i of G) (ccaaMed[C.a[i]] ||= []).push(C.t[i]);
+  const ccEnt = Object.entries(ccaaMed).filter(([k, v]) => v.length >= 100 && CCAAS[k] !== "Sin identificar");
+  if (ccEnt.length > 1) {
+    const local = G.filter(i => PROVS[C.p[i]] === "Gipuzkoa").length;
+    if (state.ccaa === "" && state.prov === "") out.push(`El <b>${pct(local / G.length, 0)}</b> de los corredores viene de Gipuzkoa; hay representación de ${Object.keys(ccaaMed).length - 1} comunidades/países.`);
+    const f = ccEnt.map(([k, v]) => [k, median(v), v.length]).sort((a, b) => a[1] - b[1]);
+    out.push(`Entre las procedencias con ≥100 corredores, la mediana más rápida es la de <b>${esc(CCAAS[f[0][0]])}</b> (${fmt(f[0][1])}) y la más lenta la de <b>${esc(CCAAS[f[f.length - 1][0]])}</b> (${fmt(f[f.length - 1][1])}).`);
+  }
+  const ts = G.map(i => C.t[i]);
+  if (ts.length > 50) {
+    const s90 = ts.filter(t => t < 5400).length, s2 = ts.filter(t => t < 7200).length;
+    out.push(`El <b>${pct(s90 / ts.length)}</b> bajó de 1h30 y el <b>${pct(s2 / ts.length)}</b> de 2h00.`);
+  }
+  $("insights").innerHTML = out.map(s => `<li>${s}</li>`).join("") || `<li class="muted">No hay datos suficientes con estos filtros.</li>`;
+}
+
+// ---------- histograma ----------
+const SEXCOL = ["var(--series-1)", "var(--series-2)"], SEXWASH = ["var(--wash-1)", "var(--wash-2)"];
+function legendHTML(items, line) { return items.map(([l, c]) => `<span><i class="sw${line ? " line" : ""}" style="background:${c}"></i>${l}</span>`).join(""); }
+function renderHist() {
+  const W = widthOf("hist"), H = 300, m = { l: 48, r: 16, t: 14, b: 32 };
+  const svg = svgIn("hist", W, H);
+  if (!G.length) return;
+  const B = 120, all = G.map(i => C.t[i]);
+  const lo = Math.floor(quant([...all].sort((a, b) => a - b), 0.0005) / B) * B, hi = Math.ceil(quant([...all].sort((a, b) => a - b), 0.999) / B) * B;
+  const nb = Math.max(1, (hi - lo) / B);
+  const sexes = state.sex === "" ? [0, 1] : [+state.sex];
+  const counts = sexes.map(() => new Array(nb).fill(0));
+  for (const i of G) { const b = Math.floor((C.t[i] - lo) / B); if (b >= 0 && b < nb) counts[sexes.indexOf(C.s[i])][b]++; }
+  const tot = counts.map(c => c.reduce((a, b) => a + b, 0) || 1);
+  const val = (k, b) => state.histMode === "pct" ? counts[k][b] / tot[k] : counts[k][b];
+  const ymax = Math.max(...counts.flatMap((c, k) => c.map((_, b) => val(k, b)))) * 1.08 || 1;
+  const x = t => m.l + (t - lo) / (hi - lo) * (W - m.l - m.r), y = v => H - m.b - v / ymax * (H - m.t - m.b);
+  const yt = niceTicks(0, ymax, 5);
+  yt.forEach(v => { el("line", { x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), class: "gridline" }, svg); el("text", { x: m.l - 6, y: y(v) + 4, "text-anchor": "end", text: state.histMode === "pct" ? pct(v, v < 0.01 ? 1 : 0) : n0(v) }, svg); });
+  timeTicks(lo, hi, 10).forEach(t => el("text", { x: x(t), y: H - m.b + 18, "text-anchor": "middle", text: fmtM(t) }, svg));
+  el("line", { x1: m.l, x2: W - m.r, y1: H - m.b, y2: H - m.b, class: "baseline" }, svg);
+  // líneas de referencia 1h30 / 2h
+  [5400, 7200].filter(t => t > lo && t < hi).forEach(t => {
+    el("line", { x1: x(t), x2: x(t), y1: m.t, y2: H - m.b, class: "gridline" }, svg);
+    el("text", { x: x(t) + 4, y: m.t + 10, text: t === 5400 ? "1h30" : "2h00" }, svg);
+  });
+  sexes.forEach((s, k) => {
+    const pts = counts[k].map((_, b) => [x(lo + (b + 0.5) * B), y(val(k, b))]);
+    const d = pts.map((p, j) => (j ? "L" : "M") + p[0].toFixed(1) + "," + p[1].toFixed(1)).join("");
+    el("path", { d: `${d}L${pts[pts.length - 1][0]},${y(0)}L${pts[0][0]},${y(0)}Z`, style: `fill:${SEXWASH[s]};stroke:none` }, svg);
+    el("path", { d, style: `fill:none;stroke:${SEXCOL[s]};stroke-width:2;stroke-linejoin:round;stroke-linecap:round` }, svg);
+  });
+  $("hist-legend").innerHTML = sexes.length > 1 ? legendHTML(sexes.map(s => [`${SEXN[s]} · mediana ${fmt(median(G.filter(i => C.s[i] === s).map(i => C.t[i])))}`, SEXCOL[s]]), true) : `<span>${SEXN[sexes[0]]} · mediana ${fmt(median(all))}</span>`;
+  // corredor seleccionado
+  const sel = state.sel;
+  if (sel >= 0 && valid(sel) && C.t[sel] >= lo && C.t[sel] <= hi) {
+    const xs = x(C.t[sel]);
+    el("line", { x1: xs, x2: xs, y1: m.t, y2: H - m.b, style: "stroke:var(--text-primary);stroke-width:1.5" }, svg);
+    el("text", { x: xs + (xs > W - 160 ? -6 : 6), y: m.t + 24, "text-anchor": xs > W - 160 ? "end" : "start", class: "val", text: `${title(C.n[sel]).split(" ")[0]} · ${fmt(C.t[sel])}` }, svg);
+  }
+  // crosshair
+  const cross = el("line", { y1: m.t, y2: H - m.b, style: "stroke:var(--axis);stroke-width:1;display:none" }, svg);
+  const hit = el("rect", { x: m.l, y: m.t, width: W - m.l - m.r, height: H - m.t - m.b, fill: "transparent" }, svg);
+  hover(hit, ev => {
+    const r = svg.getBoundingClientRect(), px = (ev.clientX - r.left) * W / r.width;
+    const b = Math.floor(((px - m.l) / (W - m.l - m.r)) * nb); if (b < 0 || b >= nb) return null;
+    cross.setAttribute("x1", x(lo + (b + .5) * B)); cross.setAttribute("x2", x(lo + (b + .5) * B)); cross.style.display = "";
+    return `<div class="t">${fmt(lo + b * B)} – ${fmt(lo + (b + 1) * B)}</div>` + sexes.map((s, k) => row(SEXN[s], `${n0(counts[k][b])} · ${pct(counts[k][b] / tot[k])}`, SEXCOL[s])).join("");
+  });
+  hit.addEventListener("mouseleave", () => cross.style.display = "none");
+}
+
+// ---------- rango por grupo (categoría / procedencia) ----------
+function rangePlot(id, rows, opts = {}) {
+  // rows: [{label, sub, series:[{s, vals(sorted), color}]}]
+  const W = widthOf(id), lw = opts.labelW || 130, rowH = opts.rowH || 34, m = { l: lw, r: 56, t: 8, b: 28 };
+  const nSeries = Math.max(...rows.map(r => r.series.length), 1);
+  const H = m.t + m.b + rows.length * rowH;
+  const svg = svgIn(id, W, H);
+  if (!rows.length) return;
+  const allV = rows.flatMap(r => r.series.flatMap(s => [quant(s.vals, .1), quant(s.vals, .9)]));
+  const lo = Math.floor(Math.min(...allV) / 300) * 300, hi = Math.ceil(Math.max(...allV) / 300) * 300;
+  const x = t => m.l + (t - lo) / (hi - lo) * (W - m.l - m.r);
+  timeTicks(lo, hi, 6).forEach(t => { el("line", { x1: x(t), x2: x(t), y1: m.t, y2: H - m.b, class: "gridline" }, svg); el("text", { x: x(t), y: H - m.b + 18, "text-anchor": "middle", text: fmtM(t) }, svg); });
+  const selT = state.sel >= 0 && valid(state.sel) ? C.t[state.sel] : 0;
+  rows.forEach((r, k) => {
+    const y0 = m.t + k * rowH;
+    el("text", { x: 0, y: y0 + rowH / 2 + (r.sub ? -2 : 4), class: "lbl", text: r.label }, svg);
+    if (r.sub) el("text", { x: 0, y: y0 + rowH / 2 + 12, text: r.sub }, svg);
+    const band = (rowH - 8) / nSeries;
+    r.series.forEach((s, j) => {
+      const cy = y0 + 4 + band * (j + .5), v = s.vals;
+      const p10 = quant(v, .1), p25 = quant(v, .25), p50 = quant(v, .5), p75 = quant(v, .75), p90 = quant(v, .9);
+      el("line", { x1: x(p10), x2: x(p90), y1: cy, y2: cy, style: `stroke:${s.color};stroke-width:2;stroke-linecap:round;opacity:.55` }, svg);
+      const bh = Math.min(10, band - 4);
+      el("rect", { x: x(p25), y: cy - bh / 2, width: Math.max(1, x(p75) - x(p25)), height: bh, rx: 4, style: `fill:${s.color};opacity:.35` }, svg);
+      el("circle", { cx: x(p50), cy, r: 5, style: `fill:${s.color};stroke:var(--surface-1);stroke-width:2` }, svg);
+      if (j === r.series.length - 1 || opts.labelAll) el("text", { x: W - m.r + 6, y: cy + 4, class: "val", text: fmtM(p50) }, svg);
+      const hit = el("rect", { x: m.l, y: cy - band / 2, width: W - m.l - m.r + m.r, height: band, fill: "transparent" }, svg);
+      hover(hit, () => `<div class="t">${esc(r.label)}${s.name ? " · " + s.name : ""}</div>` + row("Corredores", n0(v.length), s.color) + row("Mediana", fmt(p50)) + row("P25 – P75", `${fmt(p25)} – ${fmt(p75)}`) + row("P10 – P90", `${fmt(p10)} – ${fmt(p90)}`) + row("Mejor", fmt(v[0])) + row("Ritmo mediano", pace(p50 / KM) + "/km"));
+    });
+    if (k) el("line", { x1: 0, x2: W, y1: y0, y2: y0, class: "gridline", style: "opacity:.5" }, svg);
+  });
+  if (selT >= lo && selT <= hi) {
+    el("line", { x1: x(selT), x2: x(selT), y1: m.t, y2: H - m.b, style: "stroke:var(--text-primary);stroke-width:1.5;pointer-events:none" }, svg);
+  }
+}
+function renderCat() {
+  const sexes = state.sex === "" ? [0, 1] : [+state.sex];
+  const rows = [];
+  for (let c = 0; c < AGE_CATS; c++) {
+    const series = sexes.map(s => ({ s, name: SEXN[s], color: SEXCOL[s], vals: G.filter(i => C.c[i] === c && C.s[i] === s).map(i => C.t[i]).sort((a, b) => a - b) })).filter(x => x.vals.length >= 5);
+    if (series.length) rows.push({ label: title(CATS[c]), sub: series.map(x => `${x.s ? "M" : "H"} ${n0(x.vals.length)}`).join(" · "), series });
+  }
+  $("cat-legend").innerHTML = legendHTML(sexes.map(s => [SEXN[s], SEXCOL[s]]));
+  rangePlot("cat", rows, { rowH: sexes.length > 1 ? 44 : 32, labelAll: true, labelW: 120 });
+}
+function renderCcaa() {
+  const by = {}; for (const i of G) (by[C.a[i]] ||= []).push(C.t[i]);
+  const rows = Object.entries(by).filter(([k, v]) => v.length >= 20).sort((a, b) => b[1].length - a[1].length)
+    .map(([k, v]) => ({ label: CCAAS[k], sub: n0(v.length) + " corredores", series: [{ name: "", color: "var(--series-1)", vals: v.sort((a, b) => a - b) }] }));
+  rangePlot("ccaa", rows, { rowH: 34, labelW: 130 });
+}
+
+// ---------- pirámide ----------
+function renderPyr() {
+  const W = widthOf("pyr"), rowH = 44, m = { t: 8, b: 26 }, mid = W / 2, lab = 96;
+  const cnt = [0, 1].map(s => Array.from({ length: AGE_CATS }, (_, c) => G.filter(i => C.c[i] === c && C.s[i] === s).length));
+  const H = m.t + m.b + AGE_CATS * rowH, svg = svgIn("pyr", W, H);
+  const max = Math.max(...cnt.flat(), 1), half = mid - lab / 2 - 44;
+  const len = v => v / max * half;
+  const tot = G.length || 1;
+  $("pyr-legend").innerHTML = legendHTML([[SEXN[0] + " (izquierda)", SEXCOL[0]], [SEXN[1] + " (derecha)", SEXCOL[1]]]);
+  for (let c = 0; c < AGE_CATS; c++) {
+    const y0 = m.t + (AGE_CATS - 1 - c) * rowH, bh = Math.min(20, rowH - 8), cy = y0 + rowH / 2;
+    el("text", { x: mid, y: cy + 4, "text-anchor": "middle", class: "lbl", text: title(CATS[c]).replace("Veterano/a", "Vet.") }, svg);
+    [0, 1].forEach(s => {
+      const v = cnt[s][c], x0 = s ? mid + lab / 2 : mid - lab / 2, x1 = s ? x0 + len(v) : x0 - len(v);
+      if (v) el("path", { d: hbarPath(x0, x1, cy - bh / 2, bh), style: `fill:${SEXCOL[s]}` }, svg);
+      el("text", { x: x1 + (s ? 6 : -6), y: cy + 4, "text-anchor": s ? "start" : "end", class: "val", text: n0(v) }, svg);
+      const hit = el("rect", { x: s ? mid + lab / 2 : 0, y: y0, width: mid - lab / 2, height: rowH, fill: "transparent" }, svg);
+      hover(hit, () => `<div class="t">${title(CATS[c])} · ${SEXN[s]}</div>` + row("Corredores", n0(v), SEXCOL[s]) + row("% del total filtrado", pct(v / tot)) + row("% de su sexo", pct(v / Math.max(1, cnt[s].reduce((a, b) => a + b, 0)))));
+    });
+  }
+  el("text", { x: mid, y: H - 6, "text-anchor": "middle", text: "↑ mayor edad" }, svg);
+}
+
+// ---------- municipios ----------
+function renderTowns() {
+  const by = {}; for (const i of G) (by[C.o[i]] ||= []).push(C.t[i]);
+  const rows = Object.entries(by).sort((a, b) => b[1].length - a[1].length).slice(0, 15);
+  $("towns").innerHTML = `<thead><tr><th>Municipio</th><th>Provincia</th><th class="num">Corredores</th><th class="num">Mediana</th><th class="num">Mejor</th></tr></thead><tbody>` +
+    rows.map(([k, v]) => { v.sort((a, b) => a - b); const i = C.o.indexOf(+k); return `<tr style="cursor:default"><td>${esc(title(TOWNS[k]))}</td><td class="muted">${esc(PROVS[C.p[i]])}</td><td class="num">${n0(v.length)}</td><td class="num">${fmt(quant(v, .5))}</td><td class="num">${fmt(v[0])}</td></tr>`; }).join("") + "</tbody>";
+}
+
+// ---------- ritmo por tramo ----------
+const TGROUPS = [[0, 4500, "< 1:15"], [4500, 5400, "1:15–1:30"], [5400, 6300, "1:30–1:45"], [6300, 7200, "1:45–2:00"], [7200, 8100, "2:00–2:15"], [8100, 1e9, "> 2:15"]];
+const SEQ = ["var(--seq-6)", "var(--seq-5)", "var(--seq-4)", "var(--seq-3)", "var(--seq-2)", "var(--seq-1)"];
+function renderPace() {
+  const W = widthOf("pace"), H = 320, m = { l: 56, r: 110, t: 16, b: 34 };
+  const svg = svgIn("pace", W, H);
+  const rel = state.paceMode === "rel";
+  const segOf = i => [C.t5[i], C.t10[i] - C.t5[i], C.t15[i] - C.t10[i], C.t[i] - C.t15[i]].map(v => rel ? v / (C.t[i] / 4) - 1 : v / 5);
+  const groups = TGROUPS.map(([a, b, l], k) => {
+    const idx = G.filter(i => hasSplits(i) && C.t[i] >= a && C.t[i] < b);
+    const segs = [0, 1, 2, 3].map(s => median(idx.map(i => segOf(i)[s])));
+    return { l, n: idx.length, segs, color: SEQ[k] };
+  }).filter(g => g.n >= 10);
+  const sel = state.sel >= 0 && valid(state.sel) && hasSplits(state.sel) ? segOf(state.sel) : null;
+  const vals = groups.flatMap(g => g.segs).concat(sel || []);
+  if (!vals.length) return;
+  let lo = Math.min(...vals), hi = Math.max(...vals); const pad = (hi - lo) * 0.08 || 1; lo -= pad; hi += pad;
+  const X = ["Salida–km 5", "km 5–10", "km 10–15", "km 15–meta"];
+  const x = k => m.l + (k + 0.5) / 4 * (W - m.l - m.r);
+  const y = v => m.t + (v - lo) / (hi - lo) * (H - m.t - m.b); // arriba = más rápido
+  const yt = rel ? niceTicks(lo, hi, 5) : (() => { const st = [15, 30, 60, 120].find(v => (hi - lo) / v <= 6) || 120, o = []; for (let v = Math.ceil(lo / st) * st; v <= hi; v += st) o.push(v); return o; })();
+  yt.forEach(v => { el("line", { x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), class: "gridline" }, svg); el("text", { x: m.l - 6, y: y(v) + 4, "text-anchor": "end", text: rel ? (v > 0 ? "+" : "") + pct(v, 0) : pace(v) }, svg); });
+  X.forEach((l, k) => el("text", { x: x(k), y: H - m.b + 20, "text-anchor": "middle", class: "lbl", text: l }, svg));
+  el("text", { x: 4, y: m.t - 4, text: rel ? "más rápido que su media ↑" : "min/km · más rápido ↑" }, svg);
+  const draw = (segs, color, label, dash) => {
+    const d = segs.map((v, k) => (k ? "L" : "M") + x(k) + "," + y(v)).join("");
+    el("path", { d, style: `fill:none;stroke:${color};stroke-width:2;stroke-linejoin:round;stroke-linecap:round` }, svg);
+    segs.forEach((v, k) => el("circle", { cx: x(k), cy: y(v), r: 4, style: `fill:${color};stroke:var(--surface-1);stroke-width:2` }, svg));
+    return y(segs[3]);
+  };
+  const ends = groups.map(g => ({ y: draw(g.segs, g.color), l: g.l }));
+  if (sel) ends.push({ y: draw(sel, "var(--series-2)"), l: title(C.n[state.sel]).split(" ")[0], strong: true });
+  // etiquetas finales con anti-colisión mediante líneas guía
+  ends.sort((a, b) => a.y - b.y); const ly = []; ends.forEach((e, k) => { ly[k] = Math.max(e.y, k ? ly[k - 1] + 13 : m.t); });
+  for (let k = ends.length - 1; k >= 0; k--) if (ly[k] > H - m.b) ly[k] = k === ends.length - 1 ? H - m.b : Math.min(ly[k], ly[k + 1] - 13);
+  ends.forEach((e, k) => {
+    el("line", { x1: x(3) + 6, x2: W - m.r + 14, y1: e.y, y2: ly[k], style: "stroke:var(--axis);stroke-width:1" }, svg);
+    el("text", { x: W - m.r + 18, y: ly[k] + 4, class: e.strong ? "val" : "lbl", text: e.l }, svg);
+  });
+  $("pace-legend").innerHTML = legendHTML(groups.map(g => [`${g.l} (${n0(g.n)})`, g.color]), true) + (sel ? legendHTML([[title(C.n[state.sel]), "var(--series-2)"]], true) : "");
+  // hover por tramo
+  for (let k = 0; k < 4; k++) {
+    const hit = el("rect", { x: x(k) - (W - m.l - m.r) / 8, y: m.t, width: (W - m.l - m.r) / 4, height: H - m.t - m.b, fill: "transparent" }, svg);
+    hover(hit, () => `<div class="t">${X[k]}</div>` + groups.map(g => row(g.l, rel ? (g.segs[k] > 0 ? "+" : "") + pct(g.segs[k]) : pace(g.segs[k]) + "/km", g.color)).join("") + (sel ? row(title(C.n[state.sel]), rel ? pct(sel[k]) : pace(sel[k]) + "/km", "var(--series-2)") : ""));
+  }
+}
+
+// ---------- histogramas divergentes ----------
+function divHist(id, values, bin, lo, hi, fmtX, unit, selVal, invert) {
+  const W = widthOf(id), H = 240, m = { l: 48, r: 12, t: 12, b: 30 };
+  const svg = svgIn(id, W, H);
+  if (!values.length) return;
+  const nb = Math.round((hi - lo) / bin), cnt = new Array(nb).fill(0);
+  let under = 0, over = 0;
+  for (const v of values) { const b = Math.floor((v - lo) / bin); if (b < 0) { under++; cnt[0]++; } else if (b >= nb) { over++; cnt[nb - 1]++; } else cnt[b]++; }
+  const ymax = Math.max(...cnt) * 1.08 || 1;
+  const bw = (W - m.l - m.r) / nb, x = v => m.l + (v - lo) / (hi - lo) * (W - m.l - m.r), y = v => H - m.b - v / ymax * (H - m.t - m.b);
+  niceTicks(0, ymax, 4).forEach(v => { el("line", { x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), class: "gridline" }, svg); el("text", { x: m.l - 6, y: y(v) + 4, "text-anchor": "end", text: n0(v) }, svg); });
+  cnt.forEach((c, b) => {
+    const mid = lo + (b + .5) * bin, good = invert ? mid > 0 : mid < 0;
+    const col = Math.abs(mid) < bin / 2 ? "var(--text-muted)" : good ? "var(--div-neg)" : "var(--div-pos)";
+    const w = Math.min(24, bw - 2);
+    if (c) el("path", { d: vbarPath(m.l + b * bw + (bw - w) / 2, w, y(0), y(c)), style: `fill:${col}` }, svg);
+    const hit = el("rect", { x: m.l + b * bw, y: m.t, width: bw, height: H - m.t - m.b, fill: "transparent" }, svg);
+    const edge = b === 0 && under ? "≤ " : b === nb - 1 && over ? "≥ " : "";
+    hover(hit, () => `<div class="t">${edge}${fmtX(lo + b * bin)} ${edge ? "" : "a " + fmtX(lo + (b + 1) * bin)}${unit}</div>` + row("Corredores", n0(c), col) + row("% del grupo", pct(c / values.length)));
+  });
+  el("line", { x1: m.l, x2: W - m.r, y1: H - m.b, y2: H - m.b, class: "baseline" }, svg);
+  el("line", { x1: x(0), x2: x(0), y1: m.t, y2: H - m.b, style: "stroke:var(--axis);stroke-width:1" }, svg);
+  niceTicks(lo, hi, 8).forEach(v => el("text", { x: x(v), y: H - m.b + 18, "text-anchor": "middle", text: fmtX(v) }, svg));
+  if (selVal != null) {
+    const xs = x(Math.max(lo, Math.min(hi, selVal)));
+    el("line", { x1: xs, x2: xs, y1: m.t, y2: H - m.b, style: "stroke:var(--text-primary);stroke-width:1.5" }, svg);
+    el("text", { x: xs + (xs > W - 120 ? -6 : 6), y: m.t + 10, "text-anchor": xs > W - 120 ? "end" : "start", class: "val", text: `${title(C.n[state.sel]).split(" ")[0]}: ${fmtX(selVal)}${unit}` }, svg);
+  }
+}
+function renderSplit() {
+  const v = G.filter(hasSplits).map(i => (C.t[i] - 2 * C.t10[i]) / C.t10[i] * 100);
+  const s = state.sel >= 0 && valid(state.sel) && hasSplits(state.sel) ? (C.t[state.sel] - 2 * C.t10[state.sel]) / C.t10[state.sel] * 100 : null;
+  divHist("split", v, 1, -10, 25, x => (x > 0 ? "+" : "") + Math.round(x) + "%", "", s, false);
+}
+function renderGain() {
+  const v = G.filter(i => rank5[i] && rankFin5[i]).map(i => rank5[i] - rankFin5[i]);
+  const sorted = [...v].sort((a, b) => a - b);
+  const span = Math.max(200, Math.ceil(Math.max(Math.abs(quant(sorted, .02)), Math.abs(quant(sorted, .98))) / 100) * 100);
+  const s = state.sel >= 0 && rank5[state.sel] && rankFin5[state.sel] ? rank5[state.sel] - rankFin5[state.sel] : null;
+  divHist("gain", v, span / 20, -span, span, x => (x > 0 ? "+" : "") + n0(x), "", s, true);
+}
+
+// ---------- hora de salida ----------
+function renderStart() {
+  const W = widthOf("start"), H = 280, m = { l: 56, r: 16, t: 14, b: 32 };
+  const svg = svgIn("start", W, H);
+  const B = 120, by = {};
+  for (const i of G) if (C.st[i]) (by[Math.floor(C.st[i] / B)] ||= []).push(C.t[i]);
+  const ks = Object.keys(by).map(Number).filter(k => by[k].length >= 15).sort((a, b) => a - b);
+  if (ks.length < 2) return;
+  const pts = ks.map(k => { const v = by[k].sort((a, b) => a - b); return { k, n: v.length, p25: quant(v, .25), p50: quant(v, .5), p75: quant(v, .75) }; });
+  const x0 = ks[0] * B, x1 = (ks[ks.length - 1] + 1) * B;
+  const lo = Math.floor(Math.min(...pts.map(p => p.p25)) / 600) * 600, hi = Math.ceil(Math.max(...pts.map(p => p.p75)) / 600) * 600;
+  const x = t => m.l + (t - x0) / (x1 - x0) * (W - m.l - m.r), y = t => H - m.b - (t - lo) / (hi - lo) * (H - m.t - m.b);
+  timeTicks(lo, hi, 6).forEach(t => { el("line", { x1: m.l, x2: W - m.r, y1: y(t), y2: y(t), class: "gridline" }, svg); el("text", { x: m.l - 6, y: y(t) + 4, "text-anchor": "end", text: fmtM(t) }, svg); });
+  for (let t = Math.ceil(x0 / 600) * 600; t <= x1; t += 600) el("text", { x: x(t), y: H - m.b + 18, "text-anchor": "middle", text: clock(t) }, svg);
+  const cx = p => x((p.k + .5) * B);
+  el("path", { d: pts.map((p, j) => (j ? "L" : "M") + cx(p) + "," + y(p.p75)).join("") + pts.slice().reverse().map(p => "L" + cx(p) + "," + y(p.p25)).join("") + "Z", style: "fill:var(--wash-1)" }, svg);
+  el("path", { d: pts.map((p, j) => (j ? "L" : "M") + cx(p) + "," + y(p.p50)).join(""), style: "fill:none;stroke:var(--series-1);stroke-width:2;stroke-linejoin:round" }, svg);
+  el("line", { x1: m.l, x2: W - m.r, y1: H - m.b, y2: H - m.b, class: "baseline" }, svg);
+  el("text", { x: W - m.r, y: H - 4, "text-anchor": "end", text: "hora de cruce de la salida" }, svg);
+  const sel = state.sel;
+  if (sel >= 0 && valid(sel) && C.st[sel] >= x0 && C.st[sel] <= x1 && C.t[sel] >= lo && C.t[sel] <= hi) {
+    el("circle", { cx: x(C.st[sel]), cy: y(C.t[sel]), r: 5, style: "fill:var(--series-2);stroke:var(--surface-1);stroke-width:2" }, svg);
+    el("text", { x: x(C.st[sel]) + 9, y: y(C.t[sel]) + 4, class: "val", text: title(C.n[sel]).split(" ")[0] }, svg);
+  }
+  const dot = el("circle", { r: 4, style: "fill:var(--series-1);stroke:var(--surface-1);stroke-width:2;display:none;pointer-events:none" }, svg);
+  const hit = el("rect", { x: m.l, y: m.t, width: W - m.l - m.r, height: H - m.t - m.b, fill: "transparent" }, svg);
+  hover(hit, ev => {
+    const r = svg.getBoundingClientRect(), px = (ev.clientX - r.left) * W / r.width;
+    let best = pts[0]; for (const p of pts) if (Math.abs(cx(p) - px) < Math.abs(cx(best) - px)) best = p;
+    dot.setAttribute("cx", cx(best)); dot.setAttribute("cy", y(best.p50)); dot.style.display = "";
+    return `<div class="t">Salida ${clock(best.k * B)} – ${clock((best.k + 1) * B)}</div>` + row("Corredores", n0(best.n), "var(--series-1)") + row("Mediana", fmt(best.p50)) + row("P25 – P75", `${fmt(best.p25)} – ${fmt(best.p75)}`);
+  });
+  hit.addEventListener("mouseleave", () => dot.style.display = "none");
+}
+
+// ---------- tabla ----------
+const PAGE = 50;
+const COLS = [
+  ["pos", "Pos.", "num", i => rankAll[i] ? n0(rankAll[i]) : "–", i => rankAll[i] || 1e9],
+  ["d", "Dorsal", "num", i => C.d[i], i => C.d[i]],
+  ["n", "Nombre", "", i => esc(title(C.n[i])), i => NAMEN[i]],
+  ["s", "Sexo", "", i => SEX1[C.s[i]], i => C.s[i]],
+  ["g", "Categoría", "", i => esc(title(GCATS[C.g[i]])), i => C.c[i] * 100 + C.g[i]],
+  ["rc", "Pos. cat.", "num", i => rankCat[i] ? n0(rankCat[i]) : "–", i => rankCat[i] || 1e9],
+  ["o", "Procedencia", "", i => esc(title(TOWNS[C.o[i]])), i => TOWNS[C.o[i]]],
+  ["t", "Tiempo", "num", i => fmt(C.t[i]), i => C.t[i] || 1e9],
+  ["pace", "Ritmo", "num", i => C.t[i] ? pace(C.t[i] / KM) : "–", i => C.t[i] || 1e9],
+  ["t5", "Km 5", "num", i => fmt(C.t5[i]), i => C.t5[i] || 1e9],
+  ["t10", "Km 10", "num", i => fmt(C.t10[i]), i => C.t10[i] || 1e9],
+  ["t15", "Km 15", "num", i => fmt(C.t15[i]), i => C.t15[i] || 1e9],
+];
+let TROWS = [];
+function tableRows() {
+  const rows = GALL.filter(passSearch);
+  const col = COLS.find(c => c[0] === state.sort), k = col[4];
+  rows.sort((a, b) => { const va = k(a), vb = k(b); return (va < vb ? -1 : va > vb ? 1 : 0) * state.dir; });
+  return rows;
+}
+function renderTable() {
+  TROWS = tableRows();
+  const pages = Math.max(1, Math.ceil(TROWS.length / PAGE)); state.page = Math.min(state.page, pages - 1);
+  const slice = TROWS.slice(state.page * PAGE, (state.page + 1) * PAGE);
+  $("results").innerHTML = `<thead><tr>${COLS.map(([k, l, c]) => `<th class="${c}" data-k="${k}">${l}${state.sort === k ? (state.dir > 0 ? " ▲" : " ▼") : ""}</th>`).join("")}</tr></thead><tbody>` +
+    slice.map(i => `<tr data-i="${i}" class="${i === state.sel ? "sel" : ""}">${COLS.map(([, , c, f]) => `<td class="${c}">${f(i)}</td>`).join("")}</tr>`).join("") + "</tbody>";
+  $("table-count").textContent = `${n0(TROWS.length)} corredores${state.name || state.dorsal ? " coinciden con la búsqueda" : ""} · pulsa una fila para ver su ficha`;
+  $("page-info").textContent = `Página ${state.page + 1} de ${n0(pages)}`;
+  $("prev").disabled = state.page === 0; $("next").disabled = state.page >= pages - 1;
+}
+$("results").addEventListener("click", ev => {
+  const th = ev.target.closest("th");
+  if (th) { const k = th.dataset.k; state.dir = state.sort === k ? -state.dir : 1; state.sort = k; renderTable(); return; }
+  const tr = ev.target.closest("tr[data-i]");
+  if (tr) { state.sel = +tr.dataset.i; render(); $("runner").scrollIntoView({ behavior: "smooth", block: "start" }); }
+});
+$("prev").onclick = () => { state.page--; renderTable(); };
+$("next").onclick = () => { state.page++; renderTable(); };
+$("csv").onclick = () => {
+  const head = ["puesto", "dorsal", "nombre", "sexo", "categoria", "puesto_categoria", "procedencia", "provincia", "comunidad", "tiempo", "km5", "km10", "km15", "hora_salida"];
+  const lines = [head.join(";")].concat(TROWS.map(i => [rankAll[i] || "", C.d[i], title(C.n[i]), SEX1[C.s[i]], GCATS[C.g[i]], rankCat[i] || "", title(TOWNS[C.o[i]]), PROVS[C.p[i]], CCAAS[C.a[i]], C.t[i] ? fmt(C.t[i]) : "", C.t5[i] ? fmt(C.t5[i]) : "", C.t10[i] ? fmt(C.t10[i]) : "", C.t15[i] ? fmt(C.t15[i]) : "", C.st[i] ? fmt(C.st[i]) : ""].join(";")));
+  const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob(["﻿" + lines.join("\n")], { type: "text/csv" })); a.download = "behobia-2026-filtrado.csv"; a.click();
+};
+
+// ---------- controles ----------
+let tmr;
+function onSearch() {
+  state.name = $("q-name").value.trim(); state.dorsal = $("q-dorsal").value.replace(/\D/g, ""); state.page = 0;
+  clearTimeout(tmr); tmr = setTimeout(() => {
+    const rows = GALL.filter(passSearch);
+    const exact = state.dorsal ? rows.find(i => String(C.d[i]) === state.dorsal) : undefined;
+    if (exact !== undefined && (!state.name || rows.length === 1)) state.sel = exact;
+    else if (rows.length === 1 && (state.name || state.dorsal)) state.sel = rows[0];
+    if (state.sel >= 0) render(); else { renderTable(); writeHash(); }
+  }, 180);
+}
+$("q-name").addEventListener("input", onSearch);
+$("q-dorsal").addEventListener("input", onSearch);
+$("f-sex").onchange = e => { state.sex = e.target.value; state.page = 0; render(); };
+$("f-cat").onchange = e => { state.cat = e.target.value; state.page = 0; render(); };
+$("f-ccaa").onchange = e => { state.ccaa = e.target.value; refreshProv(); state.page = 0; render(); };
+$("f-prov").onchange = e => { state.prov = e.target.value; state.page = 0; render(); };
+$("reset").onclick = () => { Object.assign(state, { name: "", dorsal: "", sex: "", cat: "", ccaa: "", prov: "", sel: -1, page: 0 }); syncInputs(); refreshProv(); render(); };
+document.querySelectorAll("#hist-mode button").forEach(b => b.onclick = () => { state.histMode = b.dataset.v; document.querySelectorAll("#hist-mode button").forEach(x => x.classList.toggle("on", x === b)); renderHist(); });
+document.querySelectorAll("#pace-mode button").forEach(b => b.onclick = () => { state.paceMode = b.dataset.v; document.querySelectorAll("#pace-mode button").forEach(x => x.classList.toggle("on", x === b)); renderPace(); });
+$("theme").onclick = () => {
+  const cur = document.documentElement.dataset.theme || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  document.documentElement.dataset.theme = cur === "dark" ? "light" : "dark";
+};
+$("share").onclick = () => { navigator.clipboard?.writeText(location.href).then(() => { $("share").textContent = "¡Copiado!"; setTimeout(() => $("share").textContent = "Copiar enlace", 1500); }); };
+function syncInputs() { $("q-name").value = state.name; $("q-dorsal").value = state.dorsal; $("f-sex").value = state.sex; $("f-cat").value = state.cat; $("f-ccaa").value = state.ccaa; }
+function writeHash() {
+  const p = new URLSearchParams();
+  if (state.sex !== "") p.set("sexo", state.sex); if (state.cat) p.set("cat", state.cat); if (state.ccaa !== "") p.set("ccaa", state.ccaa); if (state.prov !== "") p.set("prov", state.prov);
+  if (state.name) p.set("nombre", state.name); if (state.sel >= 0) p.set("dorsal", C.d[state.sel]); else if (state.dorsal) p.set("dorsal", state.dorsal);
+  const h = p.toString(); history.replaceState(null, "", h ? "#" + h : location.pathname + location.search);
+}
+function readHash() {
+  const p = new URLSearchParams(location.hash.slice(1));
+  state.sex = p.get("sexo") ?? ""; state.cat = p.get("cat") ?? ""; state.ccaa = p.get("ccaa") ?? ""; state.prov = p.get("prov") ?? "";
+  state.name = p.get("nombre") ?? ""; state.dorsal = p.get("dorsal") ?? "";
+  if (state.dorsal) { const i = C.d.indexOf(+state.dorsal); if (i >= 0) state.sel = i; }
+}
+$("src-note").textContent = "clasificación provisional";
+readHash(); syncInputs(); refreshProv(); render();
+let rz; addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(render, 150); });
+})();
+</script>
+</body>
+</html>
