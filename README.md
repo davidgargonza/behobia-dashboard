@@ -6,17 +6,20 @@
 Busca por nombre o dorsal y compara hasta 6 corredores: dónde iba cada uno en cada momento de la carrera (tiempo neto), tiempos de paso, ritmo por tramo y su lugar entre los 26.036 que llegaron.
 
 
-Datos: clasificación **provisional** en directo de clasificacion.behobia-sansebastian.com (8/11/2026).
+Datos: clasificación oficial de clasificacion.behobia-sansebastian.com (8/11/2026; la organización aún la marca como provisional).
 
-## Regenerar (p. ej. con la clasificación oficial)
+## Regenerar
 
 ```bash
-python3 -I scripts/scrape.py 1 <total_resultados> data/corredores.csv   # tipoCarrera=1 corredores/as
+python3 -I scripts/scrape_oficial.py 2026 <total> data/oficial.csv            # clasificación oficial
+python3 -I scripts/scrape_oficial.py 2026 <total_mujeres> data/oficial_mujeres.csv 2
+python3 -I scripts/merge_oficial.py      # añade la hora de salida del directo (data/directo.csv)
 python3 -I scripts/build_data.py
-python3 -I scripts/build_html.py   # escribe index.html
+python3 -I scripts/build_html.py         # index.html
+python3 -I scripts/build_og.py && node scripts/screenshot_og.js   # og.png
 ```
 
-`<total_resultados>` es el número que muestra la web en «Número total de resultados».
+Los totales son los que muestra oficial.php en «Número total de resultados». Después, copia `index.html` y `og.png` a la rama `gh-pages`.
 
 Tipografía: Archivo (SIL Open Font License), incrustada en el HTML desde `src/fonts/`.
 

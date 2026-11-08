@@ -66,7 +66,7 @@ def main():
     for r in rows:
         t = sec(r["tiempo"])
         st = sec(r["hora_salida"])
-        valid = 0 < t < 4 * 3600 and st > 0
+        valid = 0 < t < 4 * 3600
         town = r["procedencia"].strip() or "(sin dato)"
         if town in MANUAL:
             prov, ccaa = MANUAL[town]
@@ -94,7 +94,7 @@ def main():
     gcats = sorted(set(cols["g"]))
     cols["g"] = [gcats.index(g) for g in cols["g"]]
     out = {"meta": {"edicion": 61, "fecha": "2026-11-08", "distancia_km": 20,
-                    "fuente": "clasificacion.behobia-sansebastian.com (clasificación provisional en directo)"},
+                    "fuente": "clasificacion.behobia-sansebastian.com (clasificación oficial)"},
            "cats": cats, "gcats": gcats, "towns": towns, "provs": provs, "ccaas": ccaas, "cols": cols}
     (ROOT / "data/dashboard.json").write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     import collections
