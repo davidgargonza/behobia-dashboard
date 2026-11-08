@@ -3,200 +3,228 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Behobia–San Sebastián 2026 · Compara corredores</title>
+<title>Behobia – San Sebastián 2026 · Compara tiempos y splits</title>
+<meta name="description" content="Compara hasta seis corredores de la Behobia – San Sebastián 2026: dónde iba cada uno en cada kilómetro, tiempos de paso y ritmo por tramo.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='2' fill='%232B2E32'/%3E%3Cpath d='M2 8h3M7 8h3' stroke='%23ECEDE9' stroke-width='1.2'/%3E%3Ccircle cx='12.5' cy='8' r='2.5' fill='%23eb6834'/%3E%3C/svg%3E">
 <style>
+/* Archivo (SIL Open Font License), eje de anchura 62–125 y peso 100–900 */
+@font-face { font-family: "Archivo"; font-style: normal; font-weight: 100 900; font-stretch: 62% 125%; font-display: swap;
+  src: url(data:font/woff2;base64,/*__FONT_LATIN__*/) format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: "Archivo"; font-style: normal; font-weight: 100 900; font-stretch: 62% 125%; font-display: swap;
+  src: url(data:font/woff2;base64,/*__FONT_LATIN_EXT__*/) format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+
 :root {
-  color-scheme: light;
-  --page: #f9f9f7; --surface-1: #fcfcfb; --surface-2: #f3f2ef;
-  --text-primary: #0b0b0b; --text-secondary: #52514e; --text-muted: #898781;
-  --grid: #e1e0d9; --axis: #c3c2b7; --border: rgba(11,11,11,0.10);
-  --ref: #c3c2b7; --ref-wash: rgba(137,135,129,0.14);
-  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100; --s5: #e87ba4; --s6: #008300;
-  --focus: #2a78d6;
+  /* Superficie: el gris claro del hormigón del arcén; la carretera, asfalto. */
+  --bg: #ECEDE9;
+  --asphalt: #2B2E32;
+  --paint: #ECEDE9;          /* pintura vial sobre el asfalto */
+  --ink: #16181B;            /* 15,1:1 sobre --bg */
+  --ink-2: #43474D;          /* 7,9:1 */
+  --ink-3: #585D63;          /* 5,6:1: ejes y notas, nunca por debajo de 4,5 */
+  --rule: #C9CBC6;
+  --float: #F7F7F5;          /* lo único que flota: desplegable y tooltip */
+  /* Identidad de cada corredor: paleta categórica validada para daltonismo, en orden fijo */
+  --r1: #2a78d6; --r2: #eb6834; --r3: #1baf7a; --r4: #eda100; --r5: #e87ba4; --r6: #008300;
+
+  /* Escala tipográfica (8 tamaños) */
+  --t-12: 12px; --t-13: 13px; --t-15: 15px; --t-17: 17px; --t-22: 22px; --t-30: 30px; --t-44: 44px; --t-64: 64px;
+  /* Espacios */
+  --s-4: 4px; --s-8: 8px; --s-12: 12px; --s-16: 16px; --s-24: 24px; --s-40: 40px; --s-64: 64px; --s-96: 96px;
+  /* Radio: el de la esquina de un dorsal */
+  --radius: 3px;
+  --ease: cubic-bezier(.2,.8,.2,1);
 }
 @media (prefers-color-scheme: dark) {
-  :root:where(:not([data-theme="light"])) {
-    color-scheme: dark;
-    --page: #0d0d0d; --surface-1: #1a1a19; --surface-2: #232321;
-    --text-primary: #f0efec; --text-secondary: #c3c2b7; --text-muted: #898781;
-    --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.10);
-    --ref: #52514e; --ref-wash: rgba(137,135,129,0.16);
-    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181; --s6: #008300;
-    --focus: #3987e5;
+  :root {
+    --bg: #151719; --asphalt: #2E3136; --paint: #C9CBC6;
+    --ink: #ECEDE9; --ink-2: #B9BCB6; --ink-3: #9A9E99; --rule: #33363A; --float: #202326;
+    --r1: #3987e5; --r2: #d95926; --r3: #199e70; --r4: #c98500; --r5: #d55181; --r6: #2f9e2f;
   }
-}
-:root[data-theme="dark"] {
-  color-scheme: dark;
-  --page: #0d0d0d; --surface-1: #1a1a19; --surface-2: #232321;
-  --text-primary: #f0efec; --text-secondary: #c3c2b7; --text-muted: #898781;
-  --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.10);
-  --ref: #52514e; --ref-wash: rgba(137,135,129,0.16);
-  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181; --s6: #008300;
-  --focus: #3987e5;
 }
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
-body { margin: 0; background: var(--page); color: var(--text-primary);
-  font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
-.wrap { max-width: 1120px; margin: 0 auto; padding: 40px 24px 80px; }
+body { margin: 0; background: var(--bg); color: var(--ink);
+  font-family: "Archivo", system-ui, sans-serif; font-size: var(--t-15); line-height: 1.5; font-stretch: 100%; }
 button, input { font: inherit; color: inherit; }
-.eyebrow { font-size: 13px; color: var(--text-muted); letter-spacing: .02em; }
-h1 { font-size: 34px; line-height: 1.15; font-weight: 650; letter-spacing: -0.01em; margin: 6px 0 8px; }
-h2 { font-size: 17px; font-weight: 600; margin: 0; }
-.lede { color: var(--text-secondary); margin: 0; max-width: 60ch; }
-.muted { color: var(--text-muted); }
-.top { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
-.ghost { background: transparent; border: 1px solid var(--border); border-radius: 999px; padding: 6px 14px; cursor: pointer; color: var(--text-secondary); font-size: 13px; }
-.ghost:hover { background: var(--surface-2); color: var(--text-primary); }
-.actions { display: flex; gap: 8px; flex-shrink: 0; }
+:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.wrap { max-width: 1180px; margin: 0 auto; padding: var(--s-40) var(--s-24) var(--s-96); }
+.num { font-variant-numeric: tabular-nums; }
+
+/* cabecera: el nombre de la carrera y qué es esta página */
+header { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, 420px); gap: var(--s-24) var(--s-64); align-items: end; }
+h1 { font-size: var(--t-64); line-height: .95; font-weight: 800; font-stretch: 68%; letter-spacing: -0.02em; margin: 0; }
+h1 small { display: block; font-size: var(--t-22); font-weight: 500; font-stretch: 100%; letter-spacing: 0; color: var(--ink-2); margin-top: var(--s-12); line-height: 1.3; }
+.intro { margin: 0; color: var(--ink-2); max-width: 46ch; }
 
 /* buscador */
-.search { position: relative; margin: 28px 0 0; max-width: 640px; }
-.search input { width: 100%; padding: 14px 18px 14px 44px; border-radius: 14px; border: 1px solid var(--border);
-  background: var(--surface-1); font-size: 16px; outline: none; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
-.search input:focus { border-color: var(--focus); box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus) 20%, transparent); }
-.search svg.icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; stroke: var(--text-muted); fill: none; stroke-width: 2; }
-.results { position: absolute; left: 0; right: 0; top: calc(100% + 6px); background: var(--surface-1); border: 1px solid var(--border);
-  border-radius: 14px; box-shadow: 0 12px 32px rgba(0,0,0,.12); overflow: hidden; z-index: 20; display: none; }
+.search { position: relative; margin-top: var(--s-24); }
+.search label { display: block; font-size: var(--t-13); color: var(--ink-2); margin-bottom: var(--s-4); }
+.search input { width: 100%; padding: 12px 14px; border: 0; border-bottom: 2px solid var(--ink); border-radius: 0; background: transparent; font-size: var(--t-17); }
+.search input:focus { outline: none; background: color-mix(in srgb, var(--ink) 5%, transparent); }
+.search input::placeholder { color: var(--ink-3); }
+.results { position: absolute; left: 0; right: 0; top: calc(100% + 2px); background: var(--float); border-radius: var(--radius);
+  box-shadow: 0 10px 28px rgba(0,0,0,.18); z-index: 20; display: none; max-height: 70vh; overflow: auto; }
 .results.open { display: block; }
-.opt { display: grid; grid-template-columns: 1fr auto; gap: 2px 16px; padding: 10px 16px; cursor: pointer; }
-.opt + .opt { border-top: 1px solid var(--grid); }
-.opt.active, .opt:hover { background: var(--surface-2); }
-.opt .nm { font-weight: 550; }
-.opt .meta { font-size: 13px; color: var(--text-muted); }
-.opt .tm { grid-row: 1 / 3; grid-column: 2; align-self: center; font-variant-numeric: tabular-nums; color: var(--text-secondary); }
-.opt.added { opacity: .5; cursor: default; }
-.empty-opt { padding: 14px 16px; color: var(--text-muted); font-size: 14px; }
-.hint { font-size: 13px; color: var(--text-muted); margin-top: 8px; }
+.opt { display: grid; grid-template-columns: 4.2em 1fr auto; gap: 0 var(--s-12); padding: 10px 14px; cursor: pointer; align-items: baseline; }
+.opt + .opt { border-top: 1px solid var(--rule); }
+.opt.active, .opt:hover { background: color-mix(in srgb, var(--ink) 6%, transparent); }
+.opt .d { font-weight: 700; font-stretch: 72%; font-size: var(--t-17); }
+.opt .nm { font-weight: 600; }
+.opt .meta { grid-column: 2; font-size: var(--t-13); color: var(--ink-2); }
+.opt .tm { grid-row: 1; grid-column: 3; color: var(--ink-2); }
+.opt.added { cursor: default; color: var(--ink-3); }
+.opt.added .meta::after { content: " · ya está en la comparación"; }
+.note-line { padding: 12px 14px; color: var(--ink-2); font-size: var(--t-13); }
+.warn { font-size: var(--t-13); color: var(--ink); margin: var(--s-8) 0 0; min-height: 1.5em; }
 
-/* tarjetas de corredor */
-.runners { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; margin: 28px 0 0; }
-.rc { position: relative; background: var(--surface-1); border: 1px solid var(--border); border-radius: 16px; padding: 16px 16px 14px 20px; overflow: hidden; }
-.rc::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--c); }
-.rc .nm { font-weight: 600; line-height: 1.25; padding-right: 24px; }
-.rc .meta { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
-.rc .time { font-size: 30px; font-weight: 600; margin-top: 10px; line-height: 1.1; }
-.rc .sub { font-size: 13px; color: var(--text-secondary); margin-top: 2px; }
-.rc .x { position: absolute; top: 10px; right: 10px; width: 26px; height: 26px; border-radius: 50%; border: 0; background: transparent; cursor: pointer; color: var(--text-muted); font-size: 18px; line-height: 1; }
-.rc .x:hover { background: var(--surface-2); color: var(--text-primary); }
+/* la carretera */
+section { margin-top: var(--s-64); }
+h2 { font-size: var(--t-30); line-height: 1.1; font-weight: 750; font-stretch: 72%; letter-spacing: -0.01em; margin: 0; }
+.lead { color: var(--ink-2); margin: var(--s-8) 0 0; max-width: 68ch; }
+.road-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--s-16) var(--s-40); align-items: end; }
+.clock { text-align: right; }
+.clock .t { font-size: var(--t-64); line-height: .9; font-weight: 700; font-stretch: 62%; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+.clock .w { font-size: var(--t-13); color: var(--ink-2); }
+.scrub { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--s-12) var(--s-24); align-items: center; margin-top: var(--s-24); }
+.marks { display: flex; border: 1px solid var(--ink); border-radius: var(--radius); overflow: hidden; }
+.marks button { border: 0; background: transparent; padding: 6px 12px; cursor: pointer; font-size: var(--t-13); font-weight: 600; }
+.marks button + button { border-left: 1px solid var(--ink); }
+.marks button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+input[type=range] { width: 100%; accent-color: var(--ink); height: 28px; cursor: pointer; }
 
-/* estado vacío */
-.empty { margin-top: 40px; border: 1px dashed var(--axis); border-radius: 16px; padding: 40px 24px; text-align: center; color: var(--text-secondary); }
-.empty p { margin: 0 0 14px; }
-.chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
-.chip { border: 1px solid var(--border); background: var(--surface-1); border-radius: 999px; padding: 6px 14px; cursor: pointer; font-size: 13px; color: var(--text-secondary); }
-.chip:hover { background: var(--surface-2); color: var(--text-primary); }
+.lanes { margin-top: var(--s-16); }
+.lane { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: var(--s-8) var(--s-24); align-items: center; padding: var(--s-12) 0; border-top: 1px solid var(--rule); }
+.lane:last-child { border-bottom: 1px solid var(--rule); }
+.who { display: grid; grid-template-columns: 14px 3.6em minmax(0, 1fr) auto; gap: 0 var(--s-8); align-items: baseline; }
+.who .sw { width: 12px; height: 12px; border-radius: 2px; align-self: center; }
+.who .d { font-weight: 750; font-stretch: 72%; font-size: var(--t-22); line-height: 1; }
+.who .nm { font-weight: 600; line-height: 1.25; }
+.who .meta { grid-column: 3 / 5; font-size: var(--t-13); color: var(--ink-2); }
+.who .ft { font-variant-numeric: tabular-nums; font-weight: 600; }
+.who .rm { grid-column: 3 / 5; justify-self: start; border: 0; background: none; padding: 0; margin-top: 2px; font-size: var(--t-13); color: var(--ink-2); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+.who .rm:hover { color: var(--ink); }
+.road-axis { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: var(--s-24); }
+.lane svg, .road-axis svg { display: block; width: 100%; height: auto; overflow: visible; }
+.example { font-size: var(--t-13); color: var(--ink-2); margin-top: var(--s-12); }
 
-/* secciones */
-section.block { margin-top: 40px; }
-.block-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin-bottom: 12px; }
-.block-head p { margin: 2px 0 0; color: var(--text-secondary); font-size: 14px; }
-.panel { background: var(--surface-1); border: 1px solid var(--border); border-radius: 16px; padding: 20px; }
-.duo { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-@media (max-width: 860px) { .duo { grid-template-columns: 1fr; } h1 { font-size: 28px; } .wrap { padding: 28px 16px 64px; } }
-@media (max-width: 600px) { .top { flex-direction: column-reverse; } .actions { align-self: flex-end; } .panel { padding: 14px; } }
-.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--text-secondary); margin-bottom: 10px; }
-.legend span { display: inline-flex; align-items: center; gap: 6px; }
-.key { width: 14px; height: 3px; border-radius: 2px; display: inline-block; }
+/* tabla de pasos */
+.table-wrap { overflow-x: auto; margin-top: var(--s-24); }
+table { border-collapse: collapse; font-size: var(--t-15); min-width: 100%; }
+th, td { padding: 8px 14px; text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; border-bottom: 1px solid var(--rule); }
+th:first-child, td:first-child { text-align: left; padding-left: 0; color: var(--ink-2); position: sticky; left: 0; background: var(--bg); }
+thead th { vertical-align: bottom; font-weight: 600; border-bottom: 2px solid var(--ink); }
+thead th .d { display: block; font-size: var(--t-22); font-weight: 750; font-stretch: 72%; line-height: 1; }
+thead th .sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; }
+tr.g td { border-bottom: 0; padding-top: var(--s-24); font-weight: 650; color: var(--ink); font-stretch: 72%; font-size: var(--t-17); }
+td.best { font-weight: 750; }
 
-/* tabla comparativa */
-.cmp-wrap { overflow-x: auto; }
-table.cmp { border-collapse: collapse; width: 100%; font-size: 14px; }
-.cmp th, .cmp td { padding: 9px 12px; border-bottom: 1px solid var(--grid); text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
-.cmp th:first-child, .cmp td:first-child { text-align: left; color: var(--text-secondary); position: sticky; left: 0; background: var(--surface-1); }
-.cmp thead th { font-weight: 600; color: var(--text-primary); vertical-align: bottom; }
-.cmp thead th .key { margin-right: 6px; vertical-align: middle; }
-.cmp tr.group td { color: var(--text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: .05em; padding-top: 18px; border-bottom: 0; }
-.cmp td.best { font-weight: 650; }
-.cmp td.best::after { content: " ●"; font-size: 8px; vertical-align: middle; color: var(--text-muted); }
-.seg { display: inline-flex; border: 1px solid var(--border); border-radius: 999px; padding: 2px; background: var(--surface-1); }
-.seg button { border: 0; background: transparent; padding: 4px 12px; border-radius: 999px; cursor: pointer; color: var(--text-secondary); font-size: 13px; }
-.seg button.on { background: var(--surface-2); color: var(--text-primary); font-weight: 600; }
+/* gráficos */
+.chart { margin-top: var(--s-24); }
+.chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+svg text { fill: var(--ink-3); font-size: 12px; font-family: inherit; font-variant-numeric: tabular-nums; }
+svg text.lbl { fill: var(--ink-2); font-size: 13px; }
+svg text.who { fill: var(--ink); font-size: 13px; font-weight: 650; }
+svg .grid { stroke: var(--rule); stroke-width: 1; shape-rendering: crispEdges; }
+svg .base { stroke: var(--ink-3); stroke-width: 1; shape-rendering: crispEdges; }
+.two { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: var(--s-64); }
+.keys { display: flex; flex-wrap: wrap; gap: var(--s-4) var(--s-16); font-size: var(--t-13); color: var(--ink-2); margin-top: var(--s-12); }
+.keys span { display: inline-flex; align-items: center; gap: 6px; }
+.keys i { width: 14px; height: 3px; border-radius: 1px; display: inline-block; }
+.toggle { display: inline-flex; border: 1px solid var(--ink); border-radius: var(--radius); overflow: hidden; margin-top: var(--s-16); }
+.toggle button { border: 0; background: transparent; padding: 5px 12px; cursor: pointer; font-size: var(--t-13); font-weight: 600; }
+.toggle button + button { border-left: 1px solid var(--ink); }
+.toggle button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
 
-svg { display: block; width: 100%; height: auto; overflow: visible; }
-svg text { fill: var(--text-muted); font-size: 12px; font-variant-numeric: tabular-nums; }
-svg text.lbl { fill: var(--text-secondary); }
-svg text.val { fill: var(--text-primary); font-weight: 600; }
-svg .gridline { stroke: var(--grid); stroke-width: 1; shape-rendering: crispEdges; }
-svg .baseline { stroke: var(--axis); stroke-width: 1; shape-rendering: crispEdges; }
-
-#tip { position: fixed; pointer-events: none; z-index: 50; background: var(--surface-1); color: var(--text-primary);
-  border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; font-size: 13px; box-shadow: 0 8px 24px rgba(0,0,0,.14); display: none; min-width: 180px; }
-#tip .t { font-weight: 600; margin-bottom: 6px; }
+#tip { position: fixed; pointer-events: none; z-index: 50; background: var(--float); color: var(--ink); border-radius: var(--radius);
+  padding: 10px 12px; font-size: var(--t-13); box-shadow: 0 8px 24px rgba(0,0,0,.18); display: none; min-width: 190px; }
+#tip .t { font-weight: 650; margin-bottom: 4px; }
 #tip .r { display: flex; justify-content: space-between; gap: 18px; font-variant-numeric: tabular-nums; }
-#tip .r span:first-child { color: var(--text-secondary); display: inline-flex; align-items: center; gap: 6px; }
+#tip .r span:first-child { color: var(--ink-2); display: inline-flex; align-items: center; gap: 6px; }
+#tip i { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
 
-.note { font-size: 12px; color: var(--text-muted); margin-top: 48px; border-top: 1px solid var(--grid); padding-top: 16px; }
-.note p { margin: 4px 0; max-width: 90ch; }
-.toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--text-primary); color: var(--page); padding: 8px 16px; border-radius: 999px; font-size: 13px; opacity: 0; transition: opacity .2s; pointer-events: none; }
-.toast.show { opacity: 1; }
+footer { margin-top: var(--s-96); padding-top: var(--s-16); border-top: 1px solid var(--rule); font-size: var(--t-13); color: var(--ink-2); display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: var(--s-16) var(--s-40); }
+footer p { margin: 0; max-width: 60ch; }
+footer button { border: 0; background: none; padding: 0; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; color: var(--ink); font-size: var(--t-13); }
+
+@media (max-width: 900px) {
+  header { grid-template-columns: 1fr; }
+  h1 { font-size: var(--t-44); }
+  .two { grid-template-columns: 1fr; gap: var(--s-40); }
+  .lane, .road-axis { grid-template-columns: 1fr; gap: var(--s-8); }
+  .road-axis > div:first-child { display: none; }
+  .road-head { grid-template-columns: 1fr; }
+  .clock { text-align: left; }
+  .clock .t { font-size: var(--t-44); }
+  .scrub { grid-template-columns: 1fr; }
+  .marks { justify-self: start; }
+}
+@media (max-width: 480px) { .wrap { padding: var(--s-24) var(--s-16) var(--s-64); } h2 { font-size: var(--t-22); }
+  th:first-child, td:first-child { white-space: normal; min-width: 8.5em; max-width: 9.5em; padding-right: 8px; } }
+@media (prefers-reduced-motion: no-preference) { .dot { transition: cx .25s var(--ease); } }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <div class="top">
+  <header>
+    <h1>Behobia – San Sebastián 2026<small>Tiempos y splits de la 61ª edición, corredor a corredor</small></h1>
     <div>
-      <div class="eyebrow">Behobia – San Sebastián · 61ª edición · 8 nov 2026 · 20 km</div>
-      <h1>Compara corredores</h1>
-      <p class="lede">Busca por nombre o dorsal y añade hasta 6 corredores para comparar tiempos, splits y cómo evolucionó su posición en carrera.</p>
+      <p class="intro">Busca a quien quieras por nombre o dorsal y añádelo a la comparación, hasta seis personas. Todo se calcula con tiempo neto, como si hubieran salido a la vez.</p>
+      <div class="search">
+        <label for="q">Añadir corredor</label>
+        <input id="q" type="search" placeholder="Nombre, apellidos o dorsal" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="results">
+        <div class="results" id="results" role="listbox" aria-label="Corredores que coinciden"></div>
+      </div>
+      <p class="warn" id="warn" aria-live="polite"></p>
     </div>
-    <div class="actions">
-      <button class="ghost" id="share">Copiar enlace</button>
-      <button class="ghost" id="theme" aria-label="Cambiar tema claro/oscuro">◐</button>
+  </header>
+
+  <section aria-labelledby="h-road">
+    <div class="road-head">
+      <div>
+        <h2 id="h-road">Dónde iba cada uno</h2>
+        <p class="lead" id="road-lead"></p>
+      </div>
+      <div class="clock" aria-live="polite"><div class="t" id="clock-t">0:00:00</div><div class="w">de carrera</div></div>
     </div>
-  </div>
+    <div class="scrub">
+      <div class="marks" id="marks" role="group" aria-label="Saltar a un punto de control"></div>
+      <input type="range" id="scrub" min="0" max="3600" step="1" value="0" aria-label="Tiempo de carrera">
+    </div>
+    <div class="lanes" id="lanes"></div>
+    <p class="example" id="example" hidden>Para empezar, los tres primeros y la primera mujer. Quítalos o añade a quien quieras con el buscador.</p>
+  </section>
 
-  <div class="search" role="combobox" aria-expanded="false" aria-haspopup="listbox">
-    <svg class="icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-    <input id="q" type="search" placeholder="Nombre, apellidos o dorsal" autocomplete="off" aria-autocomplete="list" aria-controls="results">
-    <div class="results" id="results" role="listbox"></div>
-  </div>
-  <div class="hint" id="hint"></div>
+  <section aria-labelledby="h-table">
+    <h2 id="h-table">Tiempos de paso</h2>
+    <p class="lead">En negrita, el mejor de cada fila. Los puestos de los km 5, 10 y 15 se cuentan entre quienes tienen ese paso registrado.</p>
+    <div class="table-wrap"><table id="cmp"></table></div>
+  </section>
 
-  <div class="runners" id="runners"></div>
-  <div id="empty" class="empty">
-    <p>Todavía no hay corredores seleccionados. Prueba con los primeros de la general:</p>
-    <div class="chips" id="suggest"></div>
-  </div>
+  <section class="two">
+    <div>
+      <h2 id="h-pace">Ritmo en cada tramo</h2>
+      <p class="lead">Minutos por kilómetro en cada tramo de 5 km. En gris, la mediana de todos los que llegaron con tiempo válido.</p>
+      <div class="toggle" id="pace-mode" role="group" aria-label="Unidad"><button data-v="abs" aria-pressed="true">min/km</button><button data-v="rel" aria-pressed="false">respecto a su ritmo medio</button></div>
+      <div class="chart" id="pace"></div>
+      <div class="keys" id="pace-keys"></div>
+    </div>
+    <div>
+      <h2 id="h-dist">Entre todos los que llegaron</h2>
+      <p class="lead" id="dist-lead"></p>
+      <div class="chart" id="dist"></div>
+    </div>
+  </section>
 
-  <div id="content" hidden>
-    <section class="block">
-      <div class="block-head"><div><h2>Resumen</h2><p>El valor destacado (●) es el mejor de los seleccionados</p></div></div>
-      <div class="panel cmp-wrap"><table class="cmp" id="cmp"></table></div>
-    </section>
-
-    <section class="block">
-      <div class="block-head">
-        <div><h2>Ritmo por tramo</h2><p>Ritmo medio en cada tramo de 5 km. La línea gris es la mediana de todos los corredores</p></div>
-        <div class="seg" id="pace-mode"><button data-v="abs" class="on">min/km</button><button data-v="rel">vs. su media</button></div>
-      </div>
-      <div class="panel"><div class="legend" id="pace-legend"></div><div id="pace"></div></div>
-    </section>
-
-    <section class="block duo">
-      <div>
-        <div class="block-head"><div><h2>Posición en carrera</h2><p>Puesto en la general en cada punto de control</p></div></div>
-        <div class="panel"><div id="posn"></div></div>
-      </div>
-      <div>
-        <div class="block-head"><div><h2>Diferencia acumulada</h2><p id="gap-sub">Tiempo respecto al más rápido de los seleccionados</p></div></div>
-        <div class="panel"><div id="gap"></div></div>
-      </div>
-    </section>
-
-    <section class="block">
-      <div class="block-head"><div><h2>Dónde quedan en la carrera</h2><p>Distribución de los <span id="n-all"></span> tiempos finales; cada línea vertical es un corredor seleccionado</p></div></div>
-      <div class="panel"><div id="dist"></div></div>
-    </section>
-  </div>
-
-  <div class="note">
-    <p><strong>Fuente:</strong> clasificacion.behobia-sansebastian.com · clasificación <em>provisional</em> en directo (pendiente de verificación por los jueces), descargada el 8/11/2026. Tiempos netos, desde el paso por la línea de salida.</p>
-    <p>Los puestos y percentiles se calculan sobre los corredores con tiempo válido. Los puestos en km 5, 10 y 15 se calculan entre quienes tienen ese split registrado. La provincia se asigna cruzando el municipio con el listado del INE.</p>
-  </div>
+  <footer>
+    <p>Datos de clasificacion.behobia-sansebastian.com: clasificación provisional en directo descargada el 8 de noviembre de 2026, pendiente de verificación por los jueces. Puede haber cambios en la oficial.</p>
+    <p>Para los puestos se descartan los registros sin tiempo, con tiempo 00:00:00 o sin hora de salida. La provincia sale de cruzar el municipio con el listado del INE.</p>
+    <p>La dirección de esta página guarda la comparación: <button id="share">copiar el enlace</button> <span id="share-msg" aria-live="polite"></span></p>
+  </footer>
 </div>
-<div id="tip"></div>
-<div class="toast" id="toast"></div>
+<div id="tip" role="status"></div>
 
 <script>
 const RAW = /*__DATA__*/null;
@@ -206,40 +234,40 @@ const RAW = /*__DATA__*/null;
 "use strict";
 const C = RAW.cols, N = C.d.length, KM = RAW.meta.distancia_km;
 const GCATS = RAW.gcats, TOWNS = RAW.towns, PROVS = RAW.provs;
-const SEXN = ["Hombres", "Mujeres"], SEX1 = ["Hombre", "Mujer"];
-const MAX = 6, SLOTS = ["var(--s1)", "var(--s2)", "var(--s3)", "var(--s4)", "var(--s5)", "var(--s6)"];
+const MAX = 6, COLORS = ["var(--r1)", "var(--r2)", "var(--r3)", "var(--r4)", "var(--r5)", "var(--r6)"];
 const norm = s => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toUpperCase();
 const NAMEN = C.n.map(norm);
 const valid = i => C.t[i] > 0;
 
-// ---------- rankings ----------
+// ---------- puestos ----------
 const order = [...Array(N).keys()].filter(valid).sort((a, b) => C.t[a] - C.t[b]);
 const rankAll = new Int32Array(N), rankSex = new Int32Array(N), rankCat = new Int32Array(N);
 const cntSex = [0, 0], cntG = {};
-order.forEach((i, k) => {
-  rankAll[i] = k + 1; rankSex[i] = ++cntSex[C.s[i]];
-  const g = C.g[i] + "|" + C.s[i]; rankCat[i] = cntG[g] = (cntG[g] || 0) + 1;
-});
-const CP = ["t5", "t10", "t15"];
-const rankCP = {};
-for (const k of CP) {
-  rankCP[k] = new Int32Array(N);
-  order.filter(i => C[k][i] > 0).sort((a, b) => C[k][a] - C[k][b]).forEach((i, j) => rankCP[k][i] = j + 1);
-}
+order.forEach((i, k) => { rankAll[i] = k + 1; rankSex[i] = ++cntSex[C.s[i]]; const g = C.g[i] + "|" + C.s[i]; rankCat[i] = cntG[g] = (cntG[g] || 0) + 1; });
+const CP = ["t5", "t10", "t15"], rankCP = {};
+for (const k of CP) { rankCP[k] = new Int32Array(N); order.filter(i => C[k][i] > 0).sort((a, b) => C[k][a] - C[k][b]).forEach((i, j) => rankCP[k][i] = j + 1); }
 const cpTimes = i => [C.t5[i] || 0, C.t10[i] || 0, C.t15[i] || 0, C.t[i]];
-const cpRanks = i => [rankCP.t5[i], rankCP.t10[i], rankCP.t15[i], rankAll[i]];
 const segs = i => { const c = cpTimes(i); if (!c[0] || !c[1] || !c[2]) return null; return [c[0], c[1] - c[0], c[2] - c[1], c[3] - c[2]]; };
-// referencia: mediana general por tramo
-function median(a) { const s = [...a].sort((x, y) => x - y); const m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; }
-const REF = (() => { const S = [[], [], [], []], R = [[], [], [], []]; for (const i of order) { const s = segs(i); if (!s) continue; const avg = C.t[i] / 4; s.forEach((v, k) => { S[k].push(v / 5); R[k].push(v / avg - 1); }); } return { abs: S.map(median), rel: R.map(median) }; })();
+const median = a => { const s = [...a].sort((x, y) => x - y), m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
+const REF = (() => { const S = [[], [], [], []], R = [[], [], [], []]; for (const i of order) { const s = segs(i); if (!s) continue; s.forEach((v, k) => { S[k].push(v / 5); R[k].push(v / (C.t[i] / 4) - 1); }); } return { abs: S.map(median), rel: R.map(median) }; })();
+// km recorridos a un tiempo neto dado, interpolando entre los pasos registrados
+function kmAt(i, T) {
+  if (!valid(i)) return null;
+  if (T >= C.t[i]) return 20;
+  const pts = [[0, 0]]; [[C.t5[i], 5], [C.t10[i], 10], [C.t15[i], 15]].forEach(p => p[0] > 0 && pts.push(p)); pts.push([C.t[i], 20]);
+  for (let k = 1; k < pts.length; k++) if (T <= pts[k][0]) { const [t0, d0] = pts[k - 1], [t1, d1] = pts[k]; return d0 + (d1 - d0) * (T - t0) / (t1 - t0); }
+  return 20;
+}
 
 // ---------- formato ----------
-const fmt = s => { if (!s) return "–"; s = Math.round(s); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = s % 60; return `${h}:${String(m).padStart(2, "0")}:${String(x).padStart(2, "0")}`; };
-const fmtM = s => { s = Math.round(s); return `${Math.floor(s / 3600)}:${String(Math.floor(s % 3600 / 60)).padStart(2, "0")}`; };
-const mmss = s => { const neg = s < 0; s = Math.round(Math.abs(s)); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = s % 60; return (neg ? "−" : "") + (h ? `${h}:${String(m).padStart(2, "0")}` : m) + ":" + String(x).padStart(2, "0"); };
-const pace = s => mmss(s);
+const hms = s => { s = Math.round(s); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = s % 60; return `${h}:${String(m).padStart(2, "0")}:${String(x).padStart(2, "0")}`; };
+const fmt = s => s ? hms(s) : "–";
+const ms = s => { s = Math.round(Math.abs(s)); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = s % 60; return (h ? `${h}:${String(m).padStart(2, "0")}` : m) + ":" + String(x).padStart(2, "0"); };
+const signed = s => (s > 0 ? "+" : s < 0 ? "−" : "") + ms(s);
+const hm = s => `${Math.floor(s / 3600)}:${String(Math.floor(s % 3600 / 60)).padStart(2, "0")}`;
 const nf = new Intl.NumberFormat("es-ES"), n0 = v => nf.format(Math.round(v));
-const pct = (v, d = 0) => (v * 100).toLocaleString("es-ES", { maximumFractionDigits: d, minimumFractionDigits: d }) + "%";
+const km1 = v => v.toLocaleString("es-ES", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+const pct = (v, d = 0) => (v * 100).toLocaleString("es-ES", { maximumFractionDigits: d, minimumFractionDigits: d }) + " %";
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const title = s => s.toLowerCase().replace(/(^|[\s\-(])([a-záéíóúñüçàèòï])/g, (m, a, b) => a + b.toUpperCase()).replace(/\b(Ii|Iii|Iv)\b/g, r => r.toUpperCase());
 const first = i => title(C.n[i]).split(" ")[0];
@@ -248,268 +276,243 @@ const better = (r, tot) => tot > 1 ? (tot - r) / (tot - 1) : 1;
 // ---------- svg ----------
 const NS = "http://www.w3.org/2000/svg";
 function el(tag, a = {}, p) { const e = document.createElementNS(NS, tag); for (const k in a) { if (k === "text") e.textContent = a[k]; else if (k === "style") e.style.cssText = a[k]; else e.setAttribute(k, a[k]); } if (p) p.appendChild(e); return e; }
-function svgIn(id, w, h) { const host = document.getElementById(id); host.innerHTML = ""; const s = el("svg", { viewBox: `0 0 ${w} ${h}`, role: "img" }); host.appendChild(s); return s; }
-const widthOf = id => Math.max(300, Math.round(document.getElementById(id).clientWidth || 600));
+function svgIn(host, w, h) { host.innerHTML = ""; const s = el("svg", { viewBox: `0 0 ${w} ${h}`, role: "img" }); host.appendChild(s); return s; }
+const widthOf = node => Math.max(280, Math.round(node.clientWidth || 600));
 function niceTicks(lo, hi, n = 5) { const span = hi - lo || 1, s0 = span / n, mag = 10 ** Math.floor(Math.log10(s0)), e = s0 / mag; const st = (e >= 7.5 ? 10 : e >= 3.5 ? 5 : e >= 1.5 ? 2 : 1) * mag; const o = []; for (let v = Math.ceil(lo / st) * st; v <= hi + 1e-9; v += st) o.push(+v.toFixed(10)); return o; }
 function stepTicks(lo, hi, steps, n) { const st = steps.find(s => (hi - lo) / s <= n) || steps[steps.length - 1]; const o = []; for (let v = Math.ceil(lo / st) * st; v <= hi + 1e-9; v += st) o.push(v); return o; }
-// etiquetas finales sin solaparse
-function spread(items, minGap, lo, hi) {
-  items.sort((a, b) => a.y - b.y);
-  items.forEach((it, k) => it.ly = Math.max(it.y, k ? items[k - 1].ly + minGap : lo));
-  for (let k = items.length - 1; k >= 0; k--) { const cap = k === items.length - 1 ? hi : items[k + 1].ly - minGap; if (items[k].ly > cap) items[k].ly = cap; }
-  return items;
-}
+function spread(items, gap, lo, hi) { items.sort((a, b) => a.y - b.y); items.forEach((it, k) => it.ly = Math.max(it.y, k ? items[k - 1].ly + gap : lo)); for (let k = items.length - 1; k >= 0; k--) { const cap = k === items.length - 1 ? hi : items[k + 1].ly - gap; if (items[k].ly > cap) items[k].ly = cap; } return items; }
 
 // ---------- tooltip ----------
 const tip = document.getElementById("tip");
 function showTip(ev, html) { tip.innerHTML = html; tip.style.display = "block"; const r = tip.getBoundingClientRect(); let x = ev.clientX + 16, y = ev.clientY + 16; if (x + r.width > innerWidth - 8) x = ev.clientX - r.width - 16; if (y + r.height > innerHeight - 8) y = ev.clientY - r.height - 16; tip.style.left = x + "px"; tip.style.top = y + "px"; }
 const hideTip = () => tip.style.display = "none";
-const row = (k, v, c) => `<div class="r"><span>${c ? `<i class="key" style="background:${c}"></i>` : ""}${k}</span><span>${v}</span></div>`;
+const row = (k, v, c) => `<div class="r"><span>${c ? `<i style="background:${c}"></i>` : ""}${k}</span><span>${v}</span></div>`;
 function hover(node, fn, leave) { node.addEventListener("mousemove", ev => { const h = fn(ev); h ? showTip(ev, h) : hideTip(); }); node.addEventListener("mouseleave", () => { hideTip(); leave && leave(); }); }
-const pointerX = (ev, svg, W) => { const r = svg.getBoundingClientRect(); return (ev.clientX - r.left) * W / r.width; };
 
 // ---------- estado ----------
 const $ = id => document.getElementById(id);
-let sel = []; // [{i, slot}]
-let paceMode = "abs";
-const col = r => SLOTS[r.slot];
+let sel = [], paceMode = "abs", T = 0, isExample = false;
+const col = r => COLORS[r.slot];
+const refRunner = () => sel.filter(r => valid(r.i)).sort((a, b) => C.t[a.i] - C.t[b.i])[0];
+function warn(t) { $("warn").textContent = t; clearTimeout(warn.t); warn.t = setTimeout(() => $("warn").textContent = "", 4000); }
 function add(i) {
   if (sel.some(r => r.i === i)) return;
-  if (sel.length >= MAX) { toast(`Máximo ${MAX} corredores`); return; }
+  if (sel.length >= MAX) { warn(`Ya hay ${MAX} en la comparación. Quita a alguien para añadir a otra persona.`); return; }
   const used = new Set(sel.map(r => r.slot)); let slot = 0; while (used.has(slot)) slot++;
-  sel.push({ i, slot }); render();
+  sel.push({ i, slot }); isExample = false; render(true);
 }
-function remove(i) { sel = sel.filter(r => r.i !== i); render(); }
+function remove(i) { sel = sel.filter(r => r.i !== i); isExample = false; render(true); }
 
 // ---------- buscador ----------
 const q = $("q"), res = $("results");
 let matches = [], active = 0;
 function search(text) {
   const t = text.trim(); if (!t) return [];
-  const digits = /^\d+$/.test(t);
-  const out = [];
-  if (digits) { for (let i = 0; i < N && out.length < 8; i++) if (String(C.d[i]) === t) out.push(i); for (let i = 0; i < N && out.length < 8; i++) if (String(C.d[i]).startsWith(t) && String(C.d[i]) !== t) out.push(i); return out; }
-  const toks = norm(t).split(/\s+/).filter(Boolean);
-  for (let i = 0; i < N; i++) { const n = NAMEN[i]; if (toks.every(k => n.includes(k))) { out.push(i); } }
-  out.sort((a, b) => (C.t[a] || 1e9) - (C.t[b] || 1e9));
-  return out;
+  if (/^\d+$/.test(t)) { const out = []; for (let i = 0; i < N; i++) if (String(C.d[i]) === t) out.push(i); for (let i = 0; i < N && out.length < 8; i++) if (String(C.d[i]).startsWith(t) && String(C.d[i]) !== t) out.push(i); return out; }
+  const toks = norm(t).split(/\s+/).filter(Boolean), out = [];
+  for (let i = 0; i < N; i++) if (toks.every(k => NAMEN[i].includes(k))) out.push(i);
+  return out.sort((a, b) => (C.t[a] || 1e9) - (C.t[b] || 1e9));
 }
 function drawResults() {
-  const total = matches.length, list = matches.slice(0, 8);
-  if (!q.value.trim()) { res.classList.remove("open"); return; }
+  const v = q.value.trim(); if (!v) { res.classList.remove("open"); q.setAttribute("aria-expanded", "false"); return; }
+  const list = matches.slice(0, 8);
   res.innerHTML = list.length ? list.map((i, k) => {
     const added = sel.some(r => r.i === i);
-    return `<div class="opt${k === active ? " active" : ""}${added ? " added" : ""}" data-i="${i}" role="option">
-      <span class="nm">${esc(title(C.n[i]))}</span><span class="tm">${valid(i) ? fmt(C.t[i]) : "sin tiempo"}</span>
-      <span class="meta">Dorsal ${C.d[i]} · ${esc(title(GCATS[C.g[i]]))} · ${esc(title(TOWNS[C.o[i]]))}${added ? " · ya añadido" : ""}</span></div>`;
-  }).join("") + (total > 8 ? `<div class="empty-opt">${n0(total - 8)} más · afina la búsqueda</div>` : "")
-    : `<div class="empty-opt">Sin resultados para «${esc(q.value.trim())}»</div>`;
-  res.classList.add("open");
+    return `<div class="opt${k === active ? " active" : ""}${added ? " added" : ""}" data-i="${i}" role="option" aria-selected="${k === active}">
+      <span class="d num">${C.d[i]}</span><span class="nm">${esc(title(C.n[i]))}</span><span class="tm num">${valid(i) ? hms(C.t[i]) : "sin tiempo"}</span>
+      <span class="meta">${esc(title(GCATS[C.g[i]]))}, ${esc(title(TOWNS[C.o[i]]))}</span></div>`;
+  }).join("") + (matches.length > 8 ? `<div class="note-line">Hay ${n0(matches.length - 8)} más. Añade un apellido para afinar.</div>` : "")
+    : `<div class="note-line">No hay nadie con «${esc(v)}» en la clasificación. Prueba con otro apellido o con el dorsal.</div>`;
+  res.classList.add("open"); q.setAttribute("aria-expanded", "true");
 }
 q.addEventListener("input", () => { matches = search(q.value); active = 0; drawResults(); });
 q.addEventListener("keydown", ev => {
-  if (ev.key === "ArrowDown") { active = Math.min(active + 1, Math.min(8, matches.length) - 1); drawResults(); ev.preventDefault(); }
+  const n = Math.min(8, matches.length);
+  if (ev.key === "ArrowDown") { active = Math.min(active + 1, n - 1); drawResults(); ev.preventDefault(); }
   else if (ev.key === "ArrowUp") { active = Math.max(active - 1, 0); drawResults(); ev.preventDefault(); }
-  else if (ev.key === "Enter" && matches[active] !== undefined) { pick(matches[active]); }
-  else if (ev.key === "Escape") { res.classList.remove("open"); }
+  else if (ev.key === "Enter" && matches[active] !== undefined) pick(matches[active]);
+  else if (ev.key === "Escape") { res.classList.remove("open"); q.setAttribute("aria-expanded", "false"); }
 });
-q.addEventListener("focus", () => { if (q.value.trim()) drawResults(); });
+q.addEventListener("focus", () => q.value.trim() && drawResults());
 document.addEventListener("click", ev => { if (!ev.target.closest(".search")) res.classList.remove("open"); });
 res.addEventListener("mousedown", ev => { const o = ev.target.closest(".opt"); if (o && !o.classList.contains("added")) { ev.preventDefault(); pick(+o.dataset.i); } });
 function pick(i) { if (sel.some(r => r.i === i)) return; add(i); q.value = ""; matches = []; res.classList.remove("open"); q.focus(); }
 
 // ---------- render ----------
-function render() {
+function render(resetClock) {
   writeHash();
-  $("hint").textContent = sel.length ? `${sel.length} de ${MAX} corredores` : "";
-  $("empty").hidden = sel.length > 0; $("content").hidden = sel.length === 0;
-  renderCards();
-  if (!sel.length) return;
-  renderTable(); renderPace(); renderPos(); renderGap(); renderDist();
+  $("example").hidden = !isExample;
+  const ref = refRunner();
+  if (resetClock && ref) T = C.t[ref.i];
+  renderRoad(); renderTable(); renderPace(); renderDist();
 }
-function renderCards() {
-  $("runners").innerHTML = sel.map(r => {
-    const i = r.i;
-    return `<div class="rc" style="--c:${col(r)}">
-      <button class="x" data-rm="${i}" aria-label="Quitar">×</button>
-      <div class="nm">${esc(title(C.n[i]))}</div>
-      <div class="meta">Dorsal ${C.d[i]} · ${esc(title(GCATS[C.g[i]]))}</div>
-      <div class="time">${valid(i) ? fmt(C.t[i]) : "Sin tiempo"}</div>
-      <div class="sub">${valid(i) ? `${pace(C.t[i] / KM)} min/km · puesto ${n0(rankAll[i])}` : "No figura con tiempo válido"}</div>
-    </div>`;
-  }).join("");
-}
-$("runners").addEventListener("click", ev => { const b = ev.target.closest("[data-rm]"); if (b) remove(+b.dataset.rm); });
 
+// ---------- la carretera ----------
+const PLACES = [[0, "Behobia"], [5, "km 5"], [10, "km 10"], [15, "km 15"], [20, "Donostia"]];
+function renderRoad() {
+  const lanes = $("lanes"), ref = refRunner(), scrub = $("scrub"), marks = $("marks");
+  if (!sel.length) {
+    lanes.innerHTML = `<p class="lead">No hay nadie en la comparación. Usa el buscador de arriba para añadir corredores.</p>`;
+    $("road-lead").textContent = ""; marks.innerHTML = ""; scrub.hidden = true; $("clock-t").textContent = "–"; return;
+  }
+  scrub.hidden = !ref;
+  const maxT = Math.max(...sel.filter(r => valid(r.i)).map(r => C.t[r.i]), 1);
+  scrub.max = maxT; T = Math.min(Math.max(T, 0), maxT); scrub.value = T;
+  $("clock-t").textContent = hms(T);
+  if (ref) {
+    const rt = cpTimes(ref.i), rName = first(ref.i), at = rt.findIndex(t => t === Math.round(T));
+    marks.innerHTML = ["Km 5", "Km 10", "Km 15", "Meta"].map((l, k) => rt[k] ? `<button data-t="${rt[k]}" aria-pressed="${k === at}">${l}</button>` : "").join("");
+    $("road-lead").textContent = at >= 0
+      ? `Así iban cuando ${rName}, el más rápido de la comparación, ${at === 3 ? "cruzó la meta" : "pasó por el km " + [5, 10, 15][at]}. Arrastra la barra para ver cualquier otro momento.`
+      : `Así iban a ${hms(T)} de carrera, contando desde que cada uno cruzó la salida. Los botones saltan a los pasos de ${rName}.`;
+  } else { marks.innerHTML = ""; $("road-lead").textContent = "Nadie de la comparación tiene tiempo válido."; }
+  const axisHost = document.createElement("div"); axisHost.className = "road-axis"; axisHost.innerHTML = "<div></div><div class='ax'></div>";
+  lanes.innerHTML = ""; lanes.appendChild(axisHost);
+  const rows = sel.map(r => {
+    const i = r.i, d = document.createElement("div"); d.className = "lane";
+    d.innerHTML = `<div class="who"><i class="sw" style="background:${col(r)}"></i><span class="d num">${C.d[i]}</span><span class="nm">${esc(title(C.n[i]))}</span><span class="ft">${valid(i) ? hms(C.t[i]) : "sin tiempo"}</span>
+      <span class="meta">${esc(title(GCATS[C.g[i]]))}, ${esc(title(TOWNS[C.o[i]]))}${valid(i) ? `, puesto ${n0(rankAll[i])}` : ""}</span>
+      <button class="rm" data-rm="${i}">Quitar de la comparación</button></div><div class="rd"></div>`;
+    lanes.appendChild(d); return { r, host: d.querySelector(".rd") };
+  });
+  const W = widthOf(rows[0].host), narrow = W < 560, pad = { l: 8, r: narrow ? 8 : 150 }, x = k => pad.l + k / 20 * (W - pad.l - pad.r);
+  const ax = svgIn(axisHost.querySelector(".ax"), W, 22);
+  PLACES.forEach(([k, l]) => el("text", { x: x(k), y: 15, "text-anchor": k === 0 ? "start" : k === 20 && narrow ? "end" : "middle", class: k % 20 ? "" : "lbl", text: narrow && k % 20 ? String(k) : l }, ax));
+  const refKm = ref ? kmAt(ref.i, T) : null;
+  rows.forEach(({ r, host }) => {
+    const i = r.i, H = narrow ? 48 : 40, mid = narrow ? 14 : 20, svg = svgIn(host, W, H);
+    el("rect", { x: x(0), y: mid - 9, width: x(20) - x(0), height: 18, rx: 2, style: "fill:var(--asphalt)" }, svg);
+    el("line", { x1: x(0) + 4, x2: x(20) - 4, y1: mid, y2: mid, style: "stroke:var(--paint);stroke-width:1;stroke-dasharray:6 8;opacity:.45" }, svg);
+    [5, 10, 15, 20].forEach(k => el("line", { x1: x(k), x2: x(k), y1: mid - 9, y2: mid + 9, style: `stroke:var(--paint);stroke-width:${k === 20 ? 3 : 2};opacity:${k === 20 ? .9 : .6}` }, svg));
+    const km = kmAt(i, T);
+    let label;
+    if (km == null) label = "sin tiempo válido";
+    else {
+      el("line", { x1: x(0), x2: x(km), y1: mid, y2: mid, style: `stroke:${col(r)};stroke-width:4;stroke-linecap:round` }, svg);
+      el("circle", { class: "dot", cx: x(km), cy: mid, r: 7, style: `fill:${col(r)};stroke:var(--bg);stroke-width:2.5` }, svg);
+      if (km >= 20) label = T > C.t[i] ? `en meta hace ${ms(T - C.t[i])}` : "cruzando la meta";
+      else if (ref && ref.i !== i && refKm != null) { const gap = refKm - km; label = `km ${km1(km)}, ${gap > 0.05 ? `${km1(gap)} km detrás` : gap < -0.05 ? `${km1(-gap)} km delante` : "a su altura"}`; }
+      else label = `km ${km1(km)}`;
+    }
+    el("text", narrow ? { x: pad.l, y: mid + 28, class: "lbl", text: label } : { x: W - pad.r + 12, y: mid + 4, class: "lbl", text: label }, svg);
+    hover(svg, () => km == null ? null : `<div class="t">${esc(title(C.n[i]))}</div>` + row("A " + hms(T), `km ${km1(km)}`, col(r)) + [5, 10, 15].map((k, j) => row(`Paso km ${k}`, fmt(cpTimes(i)[j]))).join("") + row("Meta", fmt(C.t[i])));
+  });
+}
+$("lanes").addEventListener("click", ev => { const b = ev.target.closest("[data-rm]"); if (b) remove(+b.dataset.rm); });
+$("scrub").addEventListener("input", ev => { T = +ev.target.value; renderRoad(); });
+$("marks").addEventListener("click", ev => { const b = ev.target.closest("button[data-t]"); if (b) { T = +b.dataset.t; renderRoad(); } });
+
+// ---------- tabla ----------
 function renderTable() {
-  const R = sel;
-  const segLabels = ["Salida → km 5", "Km 5 → 10", "Km 10 → 15", "Km 15 → meta"];
-  // [etiqueta, f(i) -> [texto, valorComparable|null], menorEsMejor]
+  const R = sel, ref = refRunner();
+  if (!R.length) { $("cmp").innerHTML = ""; return; }
+  const catTot = i => cntG[C.g[i] + "|" + C.s[i]];
   const rows = [
-    ["group", "Corredor"],
-    ["Sexo", i => [SEX1[C.s[i]], null]],
+    ["g", "Quién"],
     ["Categoría", i => [title(GCATS[C.g[i]]), null]],
     ["Procedencia", i => [`${title(TOWNS[C.o[i]])} (${PROVS[C.p[i]]})`, null]],
-    ["Hora de salida", i => [C.st[i] ? fmt(C.st[i]) : "–", null]],
-    ["group", "Resultado"],
-    ["Tiempo final", i => [fmt(C.t[i]), C.t[i] || null], true],
-    ["Ritmo medio", i => [valid(i) ? pace(C.t[i] / KM) + "/km" : "–", C.t[i] || null], true],
-    ["Puesto general", i => [rankAll[i] ? `${n0(rankAll[i])} / ${n0(order.length)}` : "–", rankAll[i] || null], true],
-    ["Puesto por sexo", i => [rankSex[i] ? `${n0(rankSex[i])} / ${n0(cntSex[C.s[i]])}` : "–", null]],
-    ["Puesto en categoría", i => [rankCat[i] ? `${n0(rankCat[i])} / ${n0(cntG[C.g[i] + "|" + C.s[i]])}` : "–", null]],
-    ["Mejor que el … de la general", i => [rankAll[i] ? pct(better(rankAll[i], order.length)) : "–", rankAll[i] ? -better(rankAll[i], order.length) : null], true],
-    ["Mejor que el … de su categoría", i => [rankCat[i] ? pct(better(rankCat[i], cntG[C.g[i] + "|" + C.s[i]])) : "–", rankCat[i] ? -better(rankCat[i], cntG[C.g[i] + "|" + C.s[i]]) : null], true],
-    ["group", "Paso por control"],
-    ...CP.map((k, j) => [`Km ${[5, 10, 15][j]}`, i => [C[k][i] ? `${fmt(C[k][i])}  · ${n0(rankCP[k][i])}º` : "–", C[k][i] || null], true]),
-    ["group", "Ritmo por tramo"],
-    ...segLabels.map((l, j) => [l, i => { const s = segs(i); return s ? [pace(s[j] / 5) + "/km", s[j]] : ["–", null]; }, true]),
-    ["2ª mitad vs. 1ª", i => { if (!valid(i) || !C.t10[i]) return ["–", null]; const d = C.t[i] - 2 * C.t10[i]; return [`${d > 0 ? "+" : ""}${mmss(d)} (${d > 0 ? "+" : ""}${pct(d / C.t10[i], 1)})`, d]; }, true],
-    ["Puestos km 5 → meta", i => { if (!rankCP.t5[i] || !rankAll[i]) return ["–", null]; const g = rankCP.t5[i] - rankAll[i]; return [`${g > 0 ? "+" : ""}${n0(g)}`, -g]; }, true],
+    ["Cruzó la salida a las", i => [C.st[i] ? hms(C.st[i]) : "–", null]],
+    ["g", "Resultado"],
+    ["Tiempo neto", i => [fmt(C.t[i]), C.t[i] || null]],
+    ["Ritmo medio", i => [valid(i) ? ms(C.t[i] / KM) + " min/km" : "–", C.t[i] || null]],
+    ["Puesto en la general", i => [rankAll[i] ? `${n0(rankAll[i])} de ${n0(order.length)}` : "–", rankAll[i] || null]],
+    ["Puesto por sexo", i => [rankSex[i] ? `${n0(rankSex[i])} de ${n0(cntSex[C.s[i]])}` : "–", null]],
+    ["Puesto en su categoría", i => [rankCat[i] ? `${n0(rankCat[i])} de ${n0(catTot(i))}` : "–", null]],
+    ["De la general, llegó detrás", i => [rankAll[i] ? pct(better(rankAll[i], order.length)) : "–", rankAll[i] ? -better(rankAll[i], order.length) : null]],
+    ["g", "Pasos (y puesto en ese punto)"],
+    ...CP.map((k, j) => [`Km ${[5, 10, 15][j]}`, i => [C[k][i] ? `${hms(C[k][i])} (${n0(rankCP[k][i])}º)` : "–", C[k][i] || null]]),
+    ["Meta", i => [valid(i) ? `${hms(C.t[i])} (${n0(rankAll[i])}º)` : "–", C.t[i] || null]],
+    ...(ref && R.length > 1 ? [["g", `Diferencia con ${first(ref.i)}`], ...["Km 5", "Km 10", "Km 15", "Meta"].map((l, j) => [l, i => { const a = cpTimes(i)[j], b = cpTimes(ref.i)[j]; return a && b ? [i === ref.i ? "–" : signed(a - b), null] : ["–", null]; }])] : []),
+    ["g", "Ritmo por tramo"],
+    ...["Salida a km 5", "Km 5 a 10", "Km 10 a 15", "Km 15 a meta"].map((l, j) => [l, i => { const s = segs(i); return s ? [ms(s[j] / 5) + " min/km", s[j]] : ["–", null]; }]),
+    ["Segunda mitad frente a la primera", i => { if (!valid(i) || !C.t10[i]) return ["–", null]; const d = C.t[i] - 2 * C.t10[i]; return [`${signed(d)} (${d > 0 ? "+" : d < 0 ? "−" : ""}${pct(Math.abs(d) / C.t10[i], 1)})`, d]; }],
+    ["Puestos ganados del km 5 a meta", i => { if (!rankCP.t5[i] || !rankAll[i]) return ["–", null]; const g = rankCP.t5[i] - rankAll[i]; return [`${g > 0 ? "+" : g < 0 ? "−" : ""}${n0(Math.abs(g))}`, -g]; }],
   ];
-  let h = `<thead><tr><th></th>${R.map(r => `<th><i class="key" style="background:${col(r)}"></i>${esc(first(r.i))}</th>`).join("")}</tr></thead><tbody>`;
-  for (const [lab, f, lowBetter] of rows) {
-    if (lab === "group") { h += `<tr class="group"><td colspan="${R.length + 1}">${f}</td></tr>`; continue; }
-    const cells = R.map(r => f(r.i));
-    const vals = cells.map(c => c[1]).filter(v => v != null);
-    const best = lowBetter && R.length > 1 && vals.length > 1 ? Math.min(...vals) : null;
-    h += `<tr><td>${lab}</td>${cells.map(c => `<td class="${best != null && c[1] === best ? "best" : ""}">${esc(c[0])}</td>`).join("")}</tr>`;
+  let h = `<thead><tr><th scope="col"><span class="sr">Dato</span></th>${R.map(r => `<th scope="col"><span class="d num"><i class="sw" style="background:${col(r)}"></i>${C.d[r.i]}</span>${esc(first(r.i))}</th>`).join("")}</tr></thead><tbody>`;
+  for (const [lab, f] of rows) {
+    if (lab === "g") { h += `<tr class="g"><td colspan="${R.length + 1}">${esc(f)}</td></tr>`; continue; }
+    const cells = R.map(r => f(r.i)), vals = cells.map(c => c[1]).filter(v => v != null);
+    const best = R.length > 1 && vals.length > 1 ? Math.min(...vals) : null;
+    h += `<tr><td>${esc(lab)}</td>${cells.map(c => `<td class="${best != null && c[1] === best ? "best" : ""}">${esc(c[0])}</td>`).join("")}</tr>`;
   }
   $("cmp").innerHTML = h + "</tbody>";
 }
 
 // ---------- ritmo por tramo ----------
-const SEGX = ["Salida–km 5", "Km 5–10", "Km 10–15", "Km 15–meta"], SEGS_SHORT = ["0–5", "5–10", "10–15", "15–20"];
+const SEGX = ["Salida a km 5", "Km 5 a 10", "Km 10 a 15", "Km 15 a meta"], SEGS = ["0–5", "5–10", "10–15", "15–20"];
 function renderPace() {
-  const W = widthOf("pace"), H = 300, m = { l: 52, r: 96, t: 20, b: 36 };
-  const svg = svgIn("pace", W, H), rel = paceMode === "rel";
-  const val = i => { const s = segs(i); if (!s) return null; return s.map(v => rel ? v / (C.t[i] / 4) - 1 : v / 5); };
-  const ref = rel ? REF.rel : REF.abs;
-  const series = sel.map(r => ({ r, v: val(r.i) })).filter(s => s.v);
+  const host = $("pace"), W = widthOf(host), H = 300, m = { l: 48, r: 84, t: 22, b: 34 };
+  const svg = svgIn(host, W, H), rel = paceMode === "rel";
+  const val = i => { const s = segs(i); return s && s.map(v => rel ? v / (C.t[i] / 4) - 1 : v / 5); };
+  const ref = rel ? REF.rel : REF.abs, series = sel.map(r => ({ r, v: val(r.i) })).filter(s => s.v);
   const all = series.flatMap(s => s.v).concat(ref);
   let lo = Math.min(...all), hi = Math.max(...all); const pad = (hi - lo) * .12 || (rel ? .02 : 5); lo -= pad; hi += pad;
   const x = k => m.l + (k + .5) / 4 * (W - m.l - m.r), y = v => m.t + (v - lo) / (hi - lo) * (H - m.t - m.b);
-  const ticks = rel ? niceTicks(lo, hi, 5) : stepTicks(lo, hi, [5, 10, 15, 30, 60, 120], 6);
-  ticks.forEach(v => { el("line", { x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), class: "gridline" }, svg); el("text", { x: m.l - 8, y: y(v) + 4, "text-anchor": "end", text: rel ? (v > 0 ? "+" : v < 0 ? "−" : "") + pct(Math.abs(v)) : pace(v) }, svg); });
-  el("text", { x: m.l - 8, y: 8, "text-anchor": "end", text: "↑ más rápido" }, svg);
-  (W < 560 ? SEGS_SHORT : SEGX).forEach((l, k) => el("text", { x: x(k), y: H - m.b + 22, "text-anchor": "middle", class: "lbl", text: l }, svg));
-  const line = (v, c, w) => el("path", { d: v.map((p, k) => (k ? "L" : "M") + x(k) + "," + y(p)).join(""), style: `fill:none;stroke:${c};stroke-width:${w};stroke-linejoin:round;stroke-linecap:round` }, svg);
-  line(ref, "var(--ref)", 2);
-  series.forEach(s => { line(s.v, col(s.r), 2); s.v.forEach((p, k) => el("circle", { cx: x(k), cy: y(p), r: 4, style: `fill:${col(s.r)};stroke:var(--surface-1);stroke-width:2` }, svg)); });
-  const ends = spread([{ y: y(ref[3]), t: "Mediana", c: "var(--ref)" }, ...series.map(s => ({ y: y(s.v[3]), t: first(s.r.i), c: col(s.r), strong: true }))], 15, m.t, H - m.b);
-  ends.forEach(e => { el("line", { x1: x(3) + 8, x2: W - m.r + 10, y1: e.y, y2: e.ly, style: "stroke:var(--axis);stroke-width:1" }, svg); el("text", { x: W - m.r + 14, y: e.ly + 4, class: e.strong ? "val" : "", text: e.t }, svg); });
+  (rel ? niceTicks(lo, hi, 5) : stepTicks(lo, hi, [5, 10, 15, 30, 60, 120], 6)).forEach(v => { el("line", { x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), class: "grid" }, svg); el("text", { x: m.l - 8, y: y(v) + 4, "text-anchor": "end", text: rel ? (v > 0 ? "+" : v < 0 ? "−" : "") + pct(Math.abs(v)) : ms(v) }, svg); });
+  el("text", { x: m.l, y: 8, text: "↑ más rápido" }, svg);
+  (W < 520 ? SEGS : SEGX).forEach((l, k) => el("text", { x: x(k), y: H - m.b + 22, "text-anchor": "middle", class: "lbl", text: l }, svg));
+  const line = (v, c) => el("path", { d: v.map((p, k) => (k ? "L" : "M") + x(k) + "," + y(p)).join(""), style: `fill:none;stroke:${c};stroke-width:2;stroke-linejoin:round;stroke-linecap:round` }, svg);
+  line(ref, "var(--ink-3)");
+  series.forEach(s => { line(s.v, col(s.r)); s.v.forEach((p, k) => el("circle", { cx: x(k), cy: y(p), r: 4, style: `fill:${col(s.r)};stroke:var(--bg);stroke-width:2` }, svg)); });
+  spread([{ y: y(ref[3]), t: "Mediana" }, ...series.map(s => ({ y: y(s.v[3]), t: first(s.r.i), who: 1 }))], 15, m.t, H - m.b)
+    .forEach(e => { el("line", { x1: x(3) + 8, x2: W - m.r + 8, y1: e.y, y2: e.ly, style: "stroke:var(--rule);stroke-width:1" }, svg); el("text", { x: W - m.r + 12, y: e.ly + 4, class: e.who ? "who" : "lbl", text: e.t }, svg); });
   const missing = sel.filter(r => !val(r.i));
-  $("pace-legend").innerHTML = series.map(s => `<span><i class="key" style="background:${col(s.r)}"></i>${esc(title(C.n[s.r.i]))}</span>`).join("") + `<span><i class="key" style="background:var(--ref)"></i>Mediana de todos</span>` + (missing.length ? `<span class="muted">Sin splits: ${missing.map(r => esc(first(r.i))).join(", ")}</span>` : "");
+  $("pace-keys").innerHTML = series.map(s => `<span><i style="background:${col(s.r)}"></i>${esc(title(C.n[s.r.i]))}</span>`).join("") + `<span><i style="background:var(--ink-3)"></i>Mediana general</span>` + (missing.length ? `<span>Sin pasos intermedios: ${missing.map(r => esc(first(r.i))).join(", ")}</span>` : "");
+  const f = v => rel ? `${v > 0 ? "+" : v < 0 ? "−" : ""}${pct(Math.abs(v), 1)}` : ms(v) + " min/km";
   for (let k = 0; k < 4; k++) {
     const hit = el("rect", { x: x(k) - (W - m.l - m.r) / 8, y: m.t, width: (W - m.l - m.r) / 4, height: H - m.t - m.b, fill: "transparent" }, svg);
-    const f = v => rel ? `${v > 0 ? "+" : ""}${pct(v, 1)}` : pace(v) + "/km";
-    hover(hit, () => `<div class="t">${SEGX[k]}</div>` + series.map(s => row(first(s.r.i), f(s.v[k]), col(s.r))).join("") + row("Mediana", f(ref[k]), "var(--ref)"));
+    hover(hit, () => `<div class="t">${SEGX[k]}</div>` + series.map(s => row(first(s.r.i), f(s.v[k]), col(s.r))).join("") + row("Mediana", f(ref[k]), "var(--ink-3)"));
   }
 }
-document.querySelectorAll("#pace-mode button").forEach(b => b.onclick = () => { paceMode = b.dataset.v; document.querySelectorAll("#pace-mode button").forEach(x => x.classList.toggle("on", x === b)); renderPace(); });
-
-// ---------- posición / diferencia ----------
-const CPX = ["Km 5", "Km 10", "Km 15", "Meta"];
-function cpChart(id, getVals, opts) {
-  const W = widthOf(id), H = 280, m = { l: opts.ml || 56, r: 80, t: 20, b: 34 };
-  const svg = svgIn(id, W, H);
-  const series = sel.map(r => ({ r, v: getVals(r.i) })).filter(s => s.v && s.v.some(v => v != null));
-  if (!series.length) { el("text", { x: W / 2, y: H / 2, "text-anchor": "middle", text: opts.empty || "Sin datos" }, svg); return; }
-  const all = series.flatMap(s => s.v.filter(v => v != null));
-  let lo = Math.min(...all, opts.zero ? 0 : Infinity), hi = Math.max(...all); if (hi === lo) hi = lo + 1; const pad = (hi - lo) * .08; if (!opts.zero) lo = Math.max(opts.min ?? -Infinity, lo - pad); hi += pad;
-  const x = k => m.l + (k + .5) / 4 * (W - m.l - m.r), y = v => opts.invert ? m.t + (v - lo) / (hi - lo) * (H - m.t - m.b) : H - m.b - (v - lo) / (hi - lo) * (H - m.t - m.b);
-  opts.ticks(lo, hi).forEach(v => { el("line", { x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), class: v === 0 && opts.zero ? "baseline" : "gridline" }, svg); el("text", { x: m.l - 8, y: y(v) + 4, "text-anchor": "end", text: opts.fmtTick(v) }, svg); });
-  if (opts.axisNote) el("text", { x: m.l - 8, y: 8, "text-anchor": "end", text: opts.axisNote }, svg);
-  (W < 420 ? ["5", "10", "15", "Meta"] : CPX).forEach((l, k) => el("text", { x: x(k), y: H - m.b + 22, "text-anchor": "middle", class: "lbl", text: l }, svg));
-  const ends = [];
-  series.forEach(s => {
-    const pts = s.v.map((v, k) => v == null ? null : [x(k), y(v)]);
-    let d = "", pen = false; pts.forEach(p => { if (!p) { pen = false; return; } d += (pen ? "L" : "M") + p[0] + "," + p[1]; pen = true; });
-    el("path", { d, style: `fill:none;stroke:${col(s.r)};stroke-width:2;stroke-linejoin:round;stroke-linecap:round` }, svg);
-    pts.forEach(p => p && el("circle", { cx: p[0], cy: p[1], r: 4, style: `fill:${col(s.r)};stroke:var(--surface-1);stroke-width:2` }, svg));
-    const last = pts.map((p, k) => [p, k]).filter(([p]) => p).pop();
-    if (last) ends.push({ y: last[0][1], x0: last[0][0], t: first(s.r.i) });
-  });
-  spread(ends, 15, m.t, H - m.b).forEach(e => { el("line", { x1: e.x0 + 8, x2: W - m.r + 10, y1: e.y, y2: e.ly, style: "stroke:var(--axis);stroke-width:1" }, svg); el("text", { x: W - m.r + 14, y: e.ly + 4, class: "val", text: e.t }, svg); });
-  for (let k = 0; k < 4; k++) {
-    const hit = el("rect", { x: x(k) - (W - m.l - m.r) / 8, y: m.t, width: (W - m.l - m.r) / 4, height: H - m.t - m.b, fill: "transparent" }, svg);
-    hover(hit, () => `<div class="t">${CPX[k]}</div>` + series.map(s => row(first(s.r.i), s.v[k] == null ? "–" : opts.fmtTip(s.v[k], s.r.i, k), col(s.r))).join(""));
-  }
-}
-function renderPos() {
-  cpChart("posn", i => valid(i) ? cpRanks(i).map(v => v || null) : null, {
-    invert: true, min: 1, ml: 60, axisNote: "↑ mejor puesto",
-    ticks: (lo, hi) => niceTicks(lo, hi, 5).filter(v => v >= 1 || v === 0).map(v => v || 1),
-    fmtTick: v => n0(v), fmtTip: v => `${n0(v)}º`,
-  });
-}
-function renderGap() {
-  const ref = sel.filter(r => valid(r.i)).sort((a, b) => C.t[a.i] - C.t[b.i])[0];
-  if (!ref || sel.length < 2) { $("gap-sub").textContent = "Añade al menos dos corredores para ver la diferencia"; svgIn("gap", widthOf("gap"), 60); return; }
-  $("gap-sub").textContent = `Tiempo de retraso respecto a ${title(C.n[ref.i])}, el más rápido de los seleccionados`;
-  const rt = cpTimes(ref.i);
-  cpChart("gap", i => valid(i) ? cpTimes(i).map((t, k) => t && rt[k] ? t - rt[k] : null) : null, {
-    zero: true, invert: true, axisNote: "↑ por delante",
-    ticks: (lo, hi) => stepTicks(lo, hi, [10, 15, 30, 60, 120, 300, 600, 900, 1800], 6),
-    fmtTick: v => v === 0 ? "0" : (v > 0 ? "+" : "") + mmss(v), fmtTip: v => v === 0 ? "referencia" : (v > 0 ? "+" : "") + mmss(v),
-  });
-}
+document.querySelectorAll("#pace-mode button").forEach(b => b.onclick = () => { paceMode = b.dataset.v; document.querySelectorAll("#pace-mode button").forEach(x => x.setAttribute("aria-pressed", x === b)); renderPace(); });
 
 // ---------- distribución ----------
 function renderDist() {
-  const W = widthOf("dist"), H = 260, m = { l: 48, r: 16, t: 20, b: 34 };
-  const svg = svgIn("dist", W, H);
-  $("n-all").textContent = n0(order.length);
-  const B = 60, ts = order.map(i => C.t[i]);
-  const lo = Math.floor(ts[0] / 300) * 300, hi = Math.ceil(ts[Math.floor(ts.length * .9995)] / 300) * 300;
-  const nb = (hi - lo) / B, cnt = new Array(nb).fill(0);
+  const host = $("dist"), W = widthOf(host), m = { l: 40, r: 8, t: 8, b: 34 };
+  const ts = order.map(i => C.t[i]), B = 60;
+  const lo = Math.floor(ts[0] / 600) * 600, hi = Math.ceil(ts[Math.floor(ts.length * .999)] / 600) * 600, nb = (hi - lo) / B, cnt = new Array(nb).fill(0);
   for (const t of ts) { const b = Math.floor((t - lo) / B); if (b >= 0 && b < nb) cnt[b]++; }
-  const ymax = Math.max(...cnt) * 1.1;
-  const x = t => m.l + (t - lo) / (hi - lo) * (W - m.l - m.r), y = v => H - m.b - v / ymax * (H - m.t - m.b);
-  niceTicks(0, ymax, 4).forEach(v => { el("line", { x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), class: "gridline" }, svg); el("text", { x: m.l - 8, y: y(v) + 4, "text-anchor": "end", text: n0(v) }, svg); });
-  stepTicks(lo, hi, [600, 900, 1800, 3600], W < 560 ? 5 : 10).forEach(t => el("text", { x: x(t), y: H - m.b + 20, "text-anchor": "middle", text: fmtM(t) }, svg));
+  const showing = sel.filter(r => valid(r.i)).sort((a, b) => C.t[a.i] - C.t[b.i]);
+  $("dist-lead").textContent = `Cuántos llegaron en cada minuto, de los ${n0(ts.length)} con tiempo válido.` + (showing.length ? " Cada raya vertical es una persona de la comparación." : "");
+  const top = m.t + showing.length * 17, Hh = 280 + showing.length * 17, svg = svgIn(host, W, Hh);
+  const ymax = Math.max(...cnt) * 1.05;
+  const x = t => m.l + (t - lo) / (hi - lo) * (W - m.l - m.r), y = v => Hh - m.b - v / ymax * (Hh - top - m.b);
+  niceTicks(0, ymax, 4).forEach(v => { el("line", { x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), class: "grid" }, svg); el("text", { x: m.l - 6, y: y(v) + 4, "text-anchor": "end", text: n0(v) }, svg); });
+  stepTicks(lo, hi, [900, 1800, 3600], W < 520 ? 4 : 7).forEach(t => el("text", { x: x(t), y: Hh - m.b + 20, "text-anchor": "middle", text: hm(t) }, svg));
   const pts = cnt.map((c, b) => [x(lo + (b + .5) * B), y(c)]);
-  const d = pts.map((p, k) => (k ? "L" : "M") + p[0].toFixed(1) + "," + p[1].toFixed(1)).join("");
-  el("path", { d: d + `L${pts[pts.length - 1][0]},${y(0)}L${pts[0][0]},${y(0)}Z`, style: "fill:var(--ref-wash)" }, svg);
-  el("path", { d, style: "fill:none;stroke:var(--ref);stroke-width:2;stroke-linejoin:round" }, svg);
-  el("line", { x1: m.l, x2: W - m.r, y1: H - m.b, y2: H - m.b, class: "baseline" }, svg);
-  // marcas de corredores, etiquetas escalonadas
-  const marks = sel.filter(r => valid(r.i) && C.t[r.i] >= lo && C.t[r.i] <= hi).map(r => ({ r, x: x(C.t[r.i]) })).sort((a, b) => a.x - b.x);
-  const lanes = [];
-  marks.forEach(mk => {
-    const label = `${first(mk.r.i)} · ${fmt(C.t[mk.r.i])}`, w = label.length * 7 + 8;
-    const right = mk.x + w < W - m.r; const x0 = right ? mk.x : mk.x - w, x1 = right ? mk.x + w : mk.x;
-    let lane = 0; while (lanes[lane] && lanes[lane].some(([a, b]) => !(x1 < a || x0 > b))) lane++;
-    (lanes[lane] ||= []).push([x0, x1]);
-    const ly = m.t + 4 + lane * 16;
-    el("line", { x1: mk.x, x2: mk.x, y1: ly - 8, y2: H - m.b, style: `stroke:${col(mk.r)};stroke-width:2` }, svg);
-    el("text", { x: right ? mk.x + 5 : mk.x - 5, y: ly + 2, "text-anchor": right ? "start" : "end", class: "val", text: label }, svg);
+  el("path", { d: pts.map((p, k) => (k ? "L" : "M") + p[0].toFixed(1) + "," + p[1].toFixed(1)).join("") + `L${pts[pts.length - 1][0]},${y(0)}L${pts[0][0]},${y(0)}Z`, style: "fill:color-mix(in srgb, var(--ink) 14%, transparent)" }, svg);
+  el("line", { x1: m.l, x2: W - m.r, y1: y(0), y2: y(0), class: "base" }, svg);
+  showing.forEach((r, k) => {
+    const xs = x(Math.min(hi, C.t[r.i])), ly = m.t + 12 + k * 17, right = xs < W - 150;
+    el("line", { x1: xs, x2: xs, y1: ly + 4, y2: y(0), style: `stroke:${col(r)};stroke-width:2` }, svg);
+    el("text", { x: right ? xs + 6 : xs - 6, y: ly, "text-anchor": right ? "start" : "end", class: "who", text: `${first(r.i)} ${hms(C.t[r.i])}` }, svg);
   });
-  const cross = el("line", { y1: m.t, y2: H - m.b, style: "stroke:var(--axis);stroke-width:1;display:none" }, svg);
-  const hit = el("rect", { x: m.l, y: m.t, width: W - m.l - m.r, height: H - m.t - m.b, fill: "transparent" }, svg);
+  const cross = el("line", { y1: top, y2: y(0), style: "stroke:var(--ink-3);stroke-width:1;display:none" }, svg);
+  const hit = el("rect", { x: m.l, y: top, width: W - m.l - m.r, height: y(0) - top, fill: "transparent" }, svg);
   hover(hit, ev => {
-    const px = pointerX(ev, svg, W), b = Math.floor((px - m.l) / (W - m.l - m.r) * nb); if (b < 0 || b >= nb) return null;
+    const r = svg.getBoundingClientRect(), px = (ev.clientX - r.left) * W / r.width, b = Math.floor((px - m.l) / (W - m.l - m.r) * nb);
+    if (b < 0 || b >= nb) return null;
     cross.setAttribute("x1", x(lo + (b + .5) * B)); cross.setAttribute("x2", x(lo + (b + .5) * B)); cross.style.display = "";
     let cum = 0; for (let k = 0; k < b; k++) cum += cnt[k];
-    return `<div class="t">${fmt(lo + b * B)} – ${fmt(lo + (b + 1) * B)}</div>` + row("Corredores", n0(cnt[b]), "var(--ref)") + row("Llegaron antes", pct(cum / ts.length));
+    return `<div class="t">De ${hms(lo + b * B)} a ${hms(lo + (b + 1) * B)}</div>` + row("Llegaron", n0(cnt[b])) + row("Llegaron antes", pct(cum / ts.length));
   }, () => cross.style.display = "none");
 }
 
-// ---------- URL, tema, sugerencias ----------
-function writeHash() { const h = sel.map(r => C.d[r.i]).join(","); history.replaceState(null, "", h ? "#d=" + h : location.pathname + location.search); }
-function readHash() {
+// ---------- dirección y arranque ----------
+function writeHash() { const h = sel.map(r => C.d[r.i]).join(","); history.replaceState(null, "", h && !isExample ? "#d=" + h : location.pathname + location.search); }
+$("share").onclick = () => {
+  const msg = $("share-msg");
+  (navigator.clipboard ? navigator.clipboard.writeText(location.href) : Promise.reject()).then(() => msg.textContent = "Copiado.", () => msg.textContent = "No se ha podido copiar; cópialo de la barra de direcciones.");
+  setTimeout(() => msg.textContent = "", 3000);
+};
+(function init() {
   const p = new URLSearchParams(location.hash.slice(1)), v = p.get("d") || p.get("dorsal") || "";
   const byD = new Map(); for (let i = 0; i < N; i++) byD.set(C.d[i], i);
-  v.split(",").map(Number).filter(Boolean).slice(0, MAX).forEach((d, k) => { const i = byD.get(d); if (i !== undefined && !sel.some(r => r.i === i)) sel.push({ i, slot: sel.length }); });
-}
-function toast(t) { const e = $("toast"); e.textContent = t; e.classList.add("show"); setTimeout(() => e.classList.remove("show"), 1600); }
-$("share").onclick = () => { (navigator.clipboard ? navigator.clipboard.writeText(location.href) : Promise.reject()).then(() => toast("Enlace copiado"), () => toast("No se pudo copiar")); };
-$("theme").onclick = () => { const cur = document.documentElement.dataset.theme || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"); document.documentElement.dataset.theme = cur === "dark" ? "light" : "dark"; };
-const firstW = order.find(i => C.s[i] === 1);
-$("suggest").innerHTML = [order[0], order[1], order[2], firstW].map(i => `<button class="chip" data-i="${i}">${esc(title(C.n[i]))} · ${fmt(C.t[i])}</button>`).join("") + `<button class="chip" data-all="1">Comparar los cuatro</button>`;
-$("suggest").addEventListener("click", ev => { const b = ev.target.closest(".chip"); if (!b) return; if (b.dataset.all) [order[0], order[1], order[2], firstW].forEach(i => sel.some(r => r.i === i) || sel.push({ i, slot: sel.length })); else return add(+b.dataset.i); render(); });
-
-readHash(); render();
-let rz; addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => sel.length && render(), 150); });
+  v.split(",").map(Number).filter(Boolean).slice(0, MAX).forEach(d => { const i = byD.get(d); if (i !== undefined && !sel.some(r => r.i === i)) sel.push({ i, slot: sel.length }); });
+  if (!sel.length) { const w = order.find(i => C.s[i] === 1); [order[0], order[1], order[2], w].forEach((i, k) => sel.push({ i, slot: k })); isExample = true; }
+  render(true);
+})();
+let rz; addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => render(false), 150); });
 })();
 </script>
 </body>
