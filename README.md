@@ -21,3 +21,5 @@ python3 -I scripts/build_html.py   # escribe index.html
 Tipografía: Archivo (SIL Open Font License), incrustada en el HTML desde `src/fonts/`.
 
 `data/perfil.json`: altitud cada 100 m, digitalizada del perfil del dossier técnico oficial 2026 (pág. 11). Desnivel positivo resultante: 193 m (oficial: 192 m).
+
+Miniatura para compartir: `python3 -I scripts/build_og.py && node scripts/screenshot_og.js` genera `og.png`; cópiala a la rama `gh-pages` junto a `index.html`.
