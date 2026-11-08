@@ -4,7 +4,7 @@
 
 `index.html` es un único archivo autocontenido (datos incluidos, sin dependencias externas).
 Busca por nombre o dorsal y compara hasta 6 corredores: dónde iba cada uno en cada momento de la carrera (tiempo neto), tiempos de paso, ritmo por tramo y su lugar entre los 26.036 que llegaron.
-El enlace admite parámetros para compartir, p. ej. `index.html#d=2,463,9200` (dorsales separados por comas).
+
 
 Datos: clasificación **provisional** en directo de clasificacion.behobia-sansebastian.com (8/11/2026).
 

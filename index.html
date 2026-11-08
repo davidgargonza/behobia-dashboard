@@ -109,6 +109,11 @@ input[type=range] { width: 100%; accent-color: var(--ink); height: 28px; cursor:
 .road-axis { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: var(--s-24); }
 .lane svg, .road-axis svg { display: block; width: 100%; height: auto; overflow: visible; }
 .example { font-size: var(--t-13); color: var(--ink-2); margin-top: var(--s-12); }
+.save { display: flex; align-items: center; gap: var(--s-12); margin-top: var(--s-16); }
+.save button { border: 1px solid var(--ink); background: var(--ink); color: var(--bg); border-radius: var(--radius); padding: 8px 14px; font-weight: 600; cursor: pointer; }
+.save button:hover { background: transparent; color: var(--ink); }
+.save button:disabled { opacity: .6; cursor: progress; }
+.save span { font-size: var(--t-13); color: var(--ink-2); }
 
 /* tabla de pasos */
 .table-wrap { overflow-x: auto; margin-top: var(--s-24); }
@@ -194,6 +199,7 @@ footer button { border: 0; background: none; padding: 0; text-decoration: underl
       <input type="range" id="scrub" min="0" max="3600" step="1" value="0" aria-label="Tiempo de carrera">
     </div>
     <div class="lanes" id="lanes"></div>
+    <div class="save"><button id="save-img">Guardar como imagen</button><span id="save-msg" aria-live="polite"></span></div>
     <p class="example" id="example" hidden>Para empezar, los tres primeros y la primera mujer. Quítalos o añade a quien quieras con el buscador.</p>
   </section>
 
@@ -221,7 +227,6 @@ footer button { border: 0; background: none; padding: 0; text-decoration: underl
   <footer>
     <p>Datos de clasificacion.behobia-sansebastian.com: clasificación provisional en directo descargada el 8 de noviembre de 2026, pendiente de verificación por los jueces. Puede haber cambios en la oficial.</p>
     <p>Para los puestos se descartan los registros sin tiempo, con tiempo 00:00:00 o sin hora de salida. La provincia sale de cruzar el municipio con el listado del INE.</p>
-    <p>La dirección de esta página guarda la comparación: <button id="share">copiar el enlace</button> <span id="share-msg" aria-live="polite"></span></p>
   </footer>
 </div>
 <div id="tip" role="status"></div>
@@ -353,9 +358,9 @@ function renderRoad() {
   const lanes = $("lanes"), ref = refRunner(), scrub = $("scrub"), marks = $("marks");
   if (!sel.length) {
     lanes.innerHTML = `<p class="lead">No hay nadie en la comparación. Usa el buscador de arriba para añadir corredores.</p>`;
-    $("road-lead").textContent = ""; marks.innerHTML = ""; scrub.hidden = true; $("clock-t").textContent = "–"; return;
+    $("road-lead").textContent = ""; marks.innerHTML = ""; scrub.hidden = true; $("clock-t").textContent = "–"; $("save-img").parentNode.hidden = true; return;
   }
-  scrub.hidden = !ref;
+  scrub.hidden = !ref; $("save-img").parentNode.hidden = false;
   const maxT = Math.max(...sel.filter(r => valid(r.i)).map(r => C.t[r.i]), 1);
   scrub.max = maxT; T = Math.min(Math.max(T, 0), maxT); scrub.value = T;
   $("clock-t").textContent = hms(T);
@@ -500,11 +505,89 @@ function renderDist() {
 
 // ---------- dirección y arranque ----------
 function writeHash() { const h = sel.map(r => C.d[r.i]).join(","); history.replaceState(null, "", h && !isExample ? "#d=" + h : location.pathname + location.search); }
-$("share").onclick = () => {
-  const msg = $("share-msg");
-  (navigator.clipboard ? navigator.clipboard.writeText(location.href) : Promise.reject()).then(() => msg.textContent = "Copiado.", () => msg.textContent = "No se ha podido copiar; cópialo de la barra de direcciones.");
-  setTimeout(() => msg.textContent = "", 3000);
-};
+// ---------- guardar como imagen (para mandarla por WhatsApp) ----------
+function roadCaption(ref) {
+  if (!ref) return "Nadie de la comparación tiene tiempo válido.";
+  const rt = cpTimes(ref.i), at = rt.findIndex(t => t === Math.round(T)), n = first(ref.i);
+  return at >= 0 ? `Así iban cuando ${n} ${at === 3 ? "cruzó la meta" : "pasó por el km " + [5, 10, 15][at]}, a ${hms(T)} de carrera.` : `Así iban a ${hms(T)} de carrera.`;
+}
+async function saveImage() {
+  const btn = $("save-img"), msg = $("save-msg");
+  btn.disabled = true; msg.textContent = "Preparando la imagen…";
+  try {
+    await Promise.all(["800 40px Archivo", "600 20px Archivo", "400 20px Archivo"].map(f => document.fonts.load(f)));
+    const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+    const K = { bg: css("--bg"), ink: css("--ink"), ink2: css("--ink-2"), ink3: css("--ink-3"), rule: css("--rule"), asphalt: css("--asphalt"), paint: css("--paint") };
+    const runColor = r => css(`--r${r.slot + 1}`);
+    const W = 1080, P = 56, laneH = 128, tblRow = 46, ref = refRunner();
+    const H = P + 150 + 40 + sel.length * laneH + 40 + 50 + sel.length * tblRow + 140;
+    const cv = document.createElement("canvas"), S = 2; cv.width = W * S; cv.height = H * S;
+    const g = cv.getContext("2d"); g.scale(S, S);
+    const font = (w, px, cond) => { g.font = `${w} ${px}px Archivo, system-ui, sans-serif`; if ("fontStretch" in g) g.fontStretch = cond ? "condensed" : "normal"; };
+    const text = (t, x, y, color, align = "left") => { g.fillStyle = color; g.textAlign = align; g.fillText(t, x, y); };
+    const fit = (t, max) => { if (g.measureText(t).width <= max) return t; while (t.length > 1 && g.measureText(t + "…").width > max) t = t.slice(0, -1); return t.trimEnd() + "…"; };
+    g.fillStyle = K.bg; g.fillRect(0, 0, W, H); g.textBaseline = "alphabetic";
+    let y = P + 50;
+    font(800, 58, true); text("Behobia – San Sebastián 2026", P, y, K.ink);
+    y += 44; font(400, 24); text(fit(roadCaption(ref), W - 2 * P), P, y, K.ink2);
+    y += 30; font(400, 20); text("Tiempo neto: como si todos hubieran salido a la vez.", P, y, K.ink3);
+    // eje
+    const rx0 = P, rx1 = W - P - 230, X = k => rx0 + k / 20 * (rx1 - rx0);
+    y += 56; font(500, 18);
+    [[0, "Behobia"], [5, "km 5"], [10, "km 10"], [15, "km 15"], [20, "Donostia"]].forEach(([k, l]) => text(l, X(k), y, k % 20 ? K.ink3 : K.ink2, k === 0 ? "left" : "center"));
+    y += 14;
+    const refKm = ref ? kmAt(ref.i, T) : null;
+    font(800, 32, true); const nx = P + 28 + Math.max(...sel.map(r => g.measureText(String(C.d[r.i])).width)) + 22;
+    for (const r of sel) {
+      const i = r.i, c = runColor(r);
+      g.fillStyle = K.rule; g.fillRect(P, y, W - 2 * P, 1);
+      const ty = y + 40;
+      g.fillStyle = c; g.fillRect(P, ty - 18, 16, 16);
+      font(800, 32, true); text(String(C.d[i]), P + 28, ty, K.ink);
+      font(700, 32, true); text(valid(i) ? hms(C.t[i]) : "sin tiempo", W - P, ty, K.ink, "right");
+      const tw = g.measureText(valid(i) ? hms(C.t[i]) : "sin tiempo").width;
+      font(600, 24); text(fit(title(C.n[i]), W - P - tw - 24 - nx), nx, ty, K.ink);
+      font(400, 19); text(fit(`${title(GCATS[C.g[i]])}, ${title(TOWNS[C.o[i]])}${valid(i) ? ` · puesto ${n0(rankAll[i])} · ${ms(C.t[i] / KM)} min/km` : ""}`, W - P - nx), nx, ty + 28, K.ink2);
+      // carretera
+      const by = y + 86, bh = 22, mid = by + bh / 2;
+      g.fillStyle = K.asphalt; g.beginPath(); g.roundRect ? g.roundRect(X(0), by, X(20) - X(0), bh, 3) : g.rect(X(0), by, X(20) - X(0), bh); g.fill();
+      g.strokeStyle = K.paint; g.globalAlpha = .45; g.lineWidth = 1.5; g.setLineDash([8, 10]); g.beginPath(); g.moveTo(X(0) + 6, mid); g.lineTo(X(20) - 6, mid); g.stroke(); g.setLineDash([]); g.globalAlpha = 1;
+      [5, 10, 15, 20].forEach(k => { g.globalAlpha = k === 20 ? .9 : .6; g.lineWidth = k === 20 ? 4 : 2.5; g.beginPath(); g.moveTo(X(k), by); g.lineTo(X(k), by + bh); g.stroke(); }); g.globalAlpha = 1;
+      const km = kmAt(i, T); let label = "sin tiempo válido";
+      if (km != null) {
+        g.strokeStyle = c; g.lineWidth = 5; g.lineCap = "round"; g.beginPath(); g.moveTo(X(0) + 3, mid); g.lineTo(X(km), mid); g.stroke(); g.lineCap = "butt";
+        g.fillStyle = c; g.strokeStyle = K.bg; g.lineWidth = 3; g.beginPath(); g.arc(X(km), mid, 10, 0, Math.PI * 2); g.fill(); g.stroke();
+        if (km >= 20) label = T > C.t[i] ? `en meta hace ${ms(T - C.t[i])}` : "cruzando la meta";
+        else if (ref && ref.i !== i && refKm != null) { const gap = refKm - km; label = `km ${km1(km)}, ${gap > 0.05 ? `${km1(gap)} km detrás` : gap < -0.05 ? `${km1(-gap)} km delante` : "a su altura"}`; }
+        else label = `km ${km1(km)}`;
+      }
+      font(500, 19); text(fit(label, W - P - X(20) - 20), X(20) + 20, mid + 7, K.ink2);
+      y += laneH;
+    }
+    g.fillStyle = K.rule; g.fillRect(P, y, W - 2 * P, 1);
+    // tiempos de paso
+    y += 64; font(750, 32, true); text("Tiempos de paso", P, y, K.ink);
+    y += 40; const cols = [W - P - 3 * 170, W - P - 2 * 170, W - P - 170, W - P];
+    font(600, 19); ["Km 5", "Km 10", "Km 15", "Meta"].forEach((l, k) => text(l, cols[k], y, K.ink2, "right"));
+    y += 12; g.fillStyle = K.ink; g.fillRect(P, y, W - 2 * P, 2);
+    for (const r of sel) {
+      y += tblRow; const i = r.i;
+      g.fillStyle = runColor(r); g.fillRect(P, y - 16, 14, 14);
+      font(600, 21); text(fit(first(i), cols[0] - 150 - P - 24), P + 24, y, K.ink);
+      font(400, 21); cpTimes(i).forEach((t, k) => text(t ? hms(t) : "–", cols[k], y, K.ink, "right"));
+      g.fillStyle = K.rule; g.fillRect(P, y + 16, W - 2 * P, 1);
+    }
+    y += 70; font(400, 16);
+    text("Clasificación provisional en directo de clasificacion.behobia-sansebastian.com, 8 de noviembre de 2026.", P, y, K.ink3);
+    const blob = await new Promise(res => cv.toBlob(res, "image/png"));
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
+    a.download = `behobia-2026-${sel.map(r => C.d[r.i]).join("-")}.png`; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+    msg.textContent = "Imagen guardada en tus descargas.";
+  } catch (e) { msg.textContent = "No se ha podido generar la imagen."; console.error(e); }
+  btn.disabled = false; setTimeout(() => msg.textContent = "", 5000);
+}
+$("save-img").onclick = saveImage;
 (function init() {
   const p = new URLSearchParams(location.hash.slice(1)), v = p.get("d") || p.get("dorsal") || "";
   const byD = new Map(); for (let i = 0; i < N; i++) byD.set(C.d[i], i);
