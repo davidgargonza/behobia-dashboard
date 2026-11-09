@@ -131,6 +131,8 @@ input[type=range] { width: 100%; accent-color: var(--ink); height: 28px; cursor:
 .winners button:hover { background: transparent; color: var(--ink); }
 .winners button small { display: block; font-weight: 400; font-size: var(--t-13); opacity: .85; }
 .climb { margin-top: var(--s-40); }
+.refbar { position: sticky; top: 0; z-index: 10; background: var(--bg); margin-top: var(--s-40); padding: var(--s-12) 0; border-bottom: 1px solid var(--rule); display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-8) var(--s-16); font-size: var(--t-15); color: var(--ink-2); }
+.refbar .toggle { margin-top: 0; }
 .climb h3 { font-size: var(--t-22); font-weight: 750; font-stretch: 72%; margin: 0; line-height: 1.15; }
 .climb h3 span { font-size: var(--t-15); font-weight: 400; font-stretch: 100%; color: var(--ink-2); margin-left: var(--s-8); }
 .climb svg { display: block; width: 100%; height: auto; overflow: visible; margin-top: var(--s-12); }
@@ -231,9 +233,14 @@ footer button { border: 0; background: none; padding: 0; text-decoration: underl
     <div class="save"><button id="share-ig">Exportar imagen</button><button id="copy-link" class="ghost">Copiar enlace</button><span id="save-msg" aria-live="polite"></span></div>
   </section>
 
+  <div class="refbar" id="refbar">
+    <span>Puestos, medianas y percentiles frente a</span>
+    <div class="toggle" id="ref-mode" role="group" aria-label="Referencia"><button data-v="all" aria-pressed="true">toda la carrera</button><button data-v="caj" aria-pressed="false">su cajón de salida</button></div>
+  </div>
+
   <section aria-labelledby="h-climb" id="climb-sec">
     <h2 id="h-climb">Cuánto cayó en las cuestas</h2>
-    <p class="lead">No hay cronometraje en lo alto de las cuestas, así que se mide el tramo de 5 km que contiene cada una y cuántos puestos ganó o perdió en él. Por defecto, el ritmo del tramo se compara con el que llevaba hasta llegar a él: si después de la cuesta se pincha, eso no la hace parecer mejor. La raya gris marca lo que cayó la mediana de todos los que llegaron.</p>
+    <p class="lead">No hay cronometraje en lo alto de las cuestas, así que se mide el tramo de 5 km que contiene cada una y cuántos puestos ganó o perdió en él. Por defecto, el ritmo del tramo se compara con el que llevaba hasta llegar a él: si después de la cuesta se pincha, eso no la hace parecer mejor. La raya gris marca lo que cayó la mediana, de toda la carrera o de su cajón según el selector de arriba.</p>
     <div class="toggle" id="climb-mode" role="group" aria-label="Comparar el ritmo del tramo con"><button data-v="prev" aria-pressed="true">frente a su ritmo hasta la cuesta</button><button data-v="avg" aria-pressed="false">frente a su ritmo medio total</button></div>
     <div id="climbs"></div>
   </section>
@@ -261,6 +268,7 @@ footer button { border: 0; background: none; padding: 0; text-decoration: underl
 
   <footer>
     <p>Datos de la clasificación oficial de clasificacion.behobia-sansebastian.com, descargada el 8 de noviembre de 2026. La organización aún la marca como provisional, así que puede cambiar. La hora de cruce de la salida sale de la clasificación en directo.</p>
+    <p>Los cajones son los 19 grupos de salida del dossier oficial. Cada corredor se asigna por su dorsal; los rangos se deducen de la hora de paso por la alfombra de salida (solo un 0,3 % la cruzó antes de la hora de su cajón).</p>
     <p>El perfil está digitalizado del dossier técnico oficial de 2026 (página 11). Sale un desnivel positivo de 193 m frente a los 192 m oficiales, y el punto más alto, 80 m en el km 7,3, coincide con el dato oficial.</p>
     <p>Los puestos se cuentan entre los 26.036 clasificados con tiempo; quienes no se clasificaron aparecen en el buscador sin tiempo. La provincia sale de cruzar el municipio con el listado del INE.</p>
   </footer>
@@ -288,9 +296,29 @@ order.forEach((i, k) => { rankAll[i] = k + 1; rankSex[i] = ++cntSex[C.s[i]]; con
 const CP = ["t5", "t10", "t15"], rankCP = {};
 for (const k of CP) { rankCP[k] = new Int32Array(N); order.filter(i => C[k][i] > 0).sort((a, b) => C[k][a] - C[k][b]).forEach((i, j) => rankCP[k][i] = j + 1); }
 const cpTimes = i => [C.t5[i] || 0, C.t10[i] || 0, C.t15[i] || 0, C.t[i]];
+// Cajones (grupos de salida): primer dorsal y hora de salida de cada uno. Las horas son las del dossier técnico
+// oficial 2026 (pág. 12); los rangos de dorsales se deducen de la hora de paso por la alfombra de salida.
+const CAJONES = [[1, "10:00"], [501, "10:01"], [1701, "10:02"], [3201, "10:04"], [4901, "10:07"], [6701, "10:10"], [8401, "10:13"], [10101, "10:19"], [11801, "10:26"], [14001, "10:29"],
+  [15601, "10:35"], [17201, "10:42"], [19001, "10:45"], [20801, "10:49"], [22601, "10:58"], [24401, "11:05"], [26201, "11:15"], [28001, "11:25"], [29801, "11:35"]];
+const cajonOf = d => { let g = 0; while (g + 1 < CAJONES.length && d >= CAJONES[g + 1][0]) g++; return g + 1; };
+const CAJ = Int8Array.from(C.d, cajonOf);
+const cajLabel = g => `cajón ${g} (salida ${CAJONES[g - 1][1]})`;
+const rankCaj = new Int32Array(N), cntCaj = new Int32Array(CAJONES.length + 1);
+order.forEach(i => rankCaj[i] = ++cntCaj[CAJ[i]]);
+const rankCPc = {};
+for (const k of ["t5", "t10", "t15"]) { rankCPc[k] = new Int32Array(N); const c = new Int32Array(CAJONES.length + 1); order.filter(i => C[k][i] > 0).sort((a, b) => C[k][a] - C[k][b]).forEach(i => rankCPc[k][i] = ++c[CAJ[i]]); }
+let refMode = "all";   // "all": toda la carrera · "caj": su cajón
+const ranksOf = (i, md = refMode) => md === "caj" ? [rankCPc.t5[i], rankCPc.t10[i], rankCPc.t15[i], rankCaj[i]] : [rankCP.t5[i], rankCP.t10[i], rankCP.t15[i], rankAll[i]];
+const inScope = (i, j, md = refMode) => md !== "caj" || CAJ[i] === CAJ[j];
 const segs = i => { const c = cpTimes(i); if (!c[0] || !c[1] || !c[2]) return null; return [c[0], c[1] - c[0], c[2] - c[1], c[3] - c[2]]; };
 const median = a => { const s = [...a].sort((x, y) => x - y), m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
-const REF = (() => { const S = [[], [], [], []], R = [[], [], [], []]; for (const i of order) { const s = segs(i); if (!s) continue; s.forEach((v, k) => { S[k].push(v / 5); R[k].push(v / (C.t[i] / 4) - 1); }); } return { abs: S.map(median), rel: R.map(median) }; })();
+const refCache = {};
+function REFof(g = 0) {   // g = 0: toda la carrera; 1..19: un cajón
+  if (refCache[g]) return refCache[g];
+  const S = [[], [], [], []], R = [[], [], [], []];
+  for (const i of order) { if (g && CAJ[i] !== g) continue; const s = segs(i); if (!s) continue; s.forEach((v, k) => { S[k].push(v / 5); R[k].push(v / (C.t[i] / 4) - 1); }); }
+  return refCache[g] = { abs: S.map(median), rel: R.map(median) };
+}
 // km recorridos a un tiempo neto dado, interpolando entre los pasos registrados
 function kmAt(i, T) {
   if (!valid(i)) return null;
@@ -325,17 +353,19 @@ const basePace = (i, seg, mode) => mode === "prev" ? cpTimes(i)[seg - 1] / (5 * 
 const slow = (i, seg, mode) => segs(i)[seg] / 5 - basePace(i, seg, mode);
 const relSlow = (i, seg, mode) => (segs(i)[seg] / 5) / basePace(i, seg, mode) - 1;
 const MODES = ["prev", "avg"];
-const SLOWSORT = {}, SLOWMED = {};
-MODES.forEach(md => {
-  SLOWSORT[md] = CLIMBS.map(c => SPL.map(i => relSlow(i, c.seg, md)).sort((a, b) => a - b));
-  SLOWMED[md] = CLIMBS.map(c => { const a = SPL.map(i => slow(i, c.seg, md)).sort((x, y) => x - y); return a[a.length >> 1]; });
-});
-function climbStats(i, ci, md = "prev") {
+const slowCache = {};
+function slowRef(md, g) {   // distribución de la caída en cada cuesta, para toda la carrera (g = 0) o un cajón
+  const key = md + g; if (slowCache[key]) return slowCache[key];
+  const pop = g ? SPL.filter(i => CAJ[i] === g) : SPL;
+  return slowCache[key] = { sort: CLIMBS.map(c => pop.map(i => relSlow(i, c.seg, md)).sort((a, b) => a - b)), med: CLIMBS.map(c => median(pop.map(i => slow(i, c.seg, md)))) };
+}
+const SLOWMED = { prev: slowRef("prev", 0).med, avg: slowRef("avg", 0).med };
+function climbStats(i, ci, md = "prev", scope = refMode) {
   if (!valid(i) || !segs(i)) return null;
-  const c = CLIMBS[ci], r = relSlow(i, c.seg, md), arr = SLOWSORT[md][ci];
+  const ref = slowRef(md, scope === "caj" ? CAJ[i] : 0), c = CLIMBS[ci], r = relSlow(i, c.seg, md), arr = ref.sort[ci];
   let lo = 0, hi = arr.length; while (lo < hi) { const m = (lo + hi) >> 1; arr[m] <= r ? lo = m + 1 : hi = m; }
-  return { d: slow(i, c.seg, md), dPrev: slow(i, c.seg, "prev"), dAvg: slow(i, c.seg, "avg"), better: (arr.length - lo) / arr.length,
-    gained: (k => { const rk = [rankCP.t5[i], rankCP.t10[i], rankCP.t15[i], rankAll[i]]; return rk[k - 1] && rk[k] ? rk[k - 1] - rk[k] : 0; })(c.seg), pace: segs(i)[c.seg] / 5, prevPace: basePace(i, c.seg, "prev") };
+  return { d: slow(i, c.seg, md), dPrev: slow(i, c.seg, "prev"), dAvg: slow(i, c.seg, "avg"), better: (arr.length - lo) / arr.length, med: ref.med[ci],
+    gained: (k => { const rk = ranksOf(i, scope); return rk[k - 1] && rk[k] ? rk[k - 1] - rk[k] : 0; })(c.seg), pace: segs(i)[c.seg] / 5, prevPace: basePace(i, c.seg, "prev") };
 }
 
 // ---------- formato ----------
@@ -420,7 +450,7 @@ function pick(i) { if (sel.some(r => r.i === i)) return; add(i); q.value = ""; m
 // ---------- render ----------
 function render(resetClock) {
   writeHash();
-  $("table-sec").hidden = $("climb-sec").hidden = !sel.length;
+  $("table-sec").hidden = $("climb-sec").hidden = $("refbar").hidden = !sel.length;
   const ref = refRunner();
   if (resetClock && ref) T = C.t[ref.i];
   renderRoad(); renderClimbs(); renderTable(); renderPace(); renderDist();
@@ -480,7 +510,7 @@ function renderRoad() {
   const rows = sel.map(r => {
     const i = r.i, d = document.createElement("div"); d.className = "lane";
     d.innerHTML = `<div class="who"><i class="sw" style="background:${col(r)}"></i><span class="d num">${C.d[i]}</span><span class="nm">${esc(title(C.n[i]))}</span><span class="ft">${valid(i) ? hms(C.t[i]) : "sin tiempo"}</span>
-      <span class="meta">${esc(title(GCATS[C.g[i]]))}, ${esc(title(TOWNS[C.o[i]]))}${valid(i) ? `, puesto ${n0(rankAll[i])}` : ""}</span>
+      <span class="meta">${esc(title(GCATS[C.g[i]]))}, ${esc(title(TOWNS[C.o[i]]))}, cajón ${CAJ[i]}${valid(i) ? `, puesto ${n0(rankAll[i])}` : ""}</span>
       <button class="rm" data-rm="${i}">Quitar de la comparación</button></div><div class="rd"></div>`;
     lanes.appendChild(d); return { r, host: d.querySelector(".rd") };
   });
@@ -521,6 +551,7 @@ function renderTable() {
     ["g", "Quién"],
     ["Categoría", i => [title(GCATS[C.g[i]]), null]],
     ["Procedencia", i => [`${title(TOWNS[C.o[i]])} (${PROVS[C.p[i]]})`, null]],
+    ["Cajón de salida", i => [`${CAJ[i]} (salida ${CAJONES[CAJ[i] - 1][1]})`, null]],
     ["Cruzó la salida a las", i => [C.st[i] ? hms(C.st[i]) : "–", null]],
     ["g", "Resultado"],
     ["Tiempo neto", i => [fmt(C.t[i]), C.t[i] || null]],
@@ -528,17 +559,18 @@ function renderTable() {
     ["Puesto en la general", i => [rankAll[i] ? `${n0(rankAll[i])} de ${n0(order.length)}` : "–", rankAll[i] || null]],
     ["Puesto por sexo", i => [rankSex[i] ? `${n0(rankSex[i])} de ${n0(cntSex[C.s[i]])}` : "–", null]],
     ["Puesto en su categoría", i => [rankCat[i] ? `${n0(rankCat[i])} de ${n0(catTot(i))}` : "–", null]],
+    ["Puesto en su cajón", i => [rankCaj[i] ? `${n0(rankCaj[i])} de ${n0(cntCaj[CAJ[i]])}` : "–", null]],
     ["De la general, llegó detrás", i => [rankAll[i] ? pct(better(rankAll[i], order.length)) : "–", rankAll[i] ? -better(rankAll[i], order.length) : null]],
-    ["g", "Pasos (y puesto en ese punto)"],
-    ...CP.map((k, j) => [`Km ${[5, 10, 15][j]}`, i => [C[k][i] ? `${hms(C[k][i])} (${n0(rankCP[k][i])}º)` : "–", C[k][i] || null]]),
-    ["Meta", i => [valid(i) ? `${hms(C.t[i])} (${n0(rankAll[i])}º)` : "–", C.t[i] || null]],
+    ["g", refMode === "caj" ? "Pasos (y puesto en ese punto dentro de su cajón)" : "Pasos (y puesto en ese punto)"],
+    ...CP.map((k, j) => [`Km ${[5, 10, 15][j]}`, i => [C[k][i] ? `${hms(C[k][i])} (${n0(ranksOf(i)[j])}º)` : "–", C[k][i] || null]]),
+    ["Meta", i => [valid(i) ? `${hms(C.t[i])} (${n0(ranksOf(i)[3])}º)` : "–", C.t[i] || null]],
     ["g", "Paso estimado por los altos"],
     ...ALTOS.map(a => [`${a.n} (km ${km1(a.km)})`, i => { const t = timeAtKm(i, a.km); return t ? [hms(t), t] : ["–", null]; }]),
     ...(ref && R.length > 1 ? [["g", `Diferencia con ${first(ref.i)}`], ...["Km 5", "Km 10", "Km 15", "Meta"].map((l, j) => [l, i => { const a = cpTimes(i)[j], b = cpTimes(ref.i)[j]; return a && b ? [i === ref.i ? "–" : signed(a - b), null] : ["–", null]; }])] : []),
     ["g", "Ritmo por tramo"],
     ...["Salida a km 5", "Km 5 a 10", "Km 10 a 15", "Km 15 a meta"].map((l, j) => [l, i => { const s = segs(i); return s ? [ms(s[j] / 5) + " min/km", s[j]] : ["–", null]; }]),
     ["Segunda mitad frente a la primera", i => { if (!valid(i) || !C.t10[i]) return ["–", null]; const d = C.t[i] - 2 * C.t10[i]; return [`${signed(d)} (${d > 0 ? "+" : d < 0 ? "−" : ""}${pct(Math.abs(d) / C.t10[i], 1)})`, d]; }],
-    ["Puestos ganados del km 5 a meta", i => { if (!rankCP.t5[i] || !rankAll[i]) return ["–", null]; const g = rankCP.t5[i] - rankAll[i]; return [`${g > 0 ? "+" : g < 0 ? "−" : ""}${n0(Math.abs(g))}`, -g]; }],
+    ["Puestos ganados del km 5 a meta", i => { const rk = ranksOf(i); if (!rk[0] || !rk[3]) return ["–", null]; const g = rk[0] - rk[3]; return [`${g > 0 ? "+" : g < 0 ? "−" : ""}${n0(Math.abs(g))}`, -g]; }],
   ];
   let h = `<thead><tr><th scope="col"><span class="sr">Dato</span></th>${R.map(r => `<th scope="col"><span class="d num"><i class="sw" style="background:${col(r)}"></i>${C.d[r.i]}</span>${esc(first(r.i))}</th>`).join("")}</tr></thead><tbody>`;
   for (const [lab, f] of rows) {
@@ -556,8 +588,10 @@ function renderPace() {
   const host = $("pace"), W = widthOf(host), H = 300, m = { l: 48, r: 84, t: 22, b: 34 };
   const svg = svgIn(host, W, H + (W < 620 ? 34 : 18)), rel = paceMode === "rel";
   const val = i => { const s = segs(i); return s && s.map(v => rel ? v / (C.t[i] / 4) - 1 : v / 5); };
-  const ref = rel ? REF.rel : REF.abs, series = sel.map(r => ({ r, v: val(r.i) })).filter(s => s.v);
-  const all = series.flatMap(s => s.v).concat(ref);
+  const series = sel.map(r => ({ r, v: val(r.i) })).filter(s => s.v);
+  const scopes = refMode === "caj" ? [...new Set(sel.map(r => CAJ[r.i]))].sort((a, b) => a - b) : [0];
+  const refs = scopes.map(g => ({ g, v: (rel ? REFof(g).rel : REFof(g).abs), t: g ? `Mediana caj. ${g}` : "Mediana" }));
+  const all = series.flatMap(s => s.v).concat(refs.flatMap(r => r.v));
   let lo = Math.min(...all), hi = Math.max(...all); const pad = (hi - lo) * .12 || (rel ? .02 : 5); lo -= pad; hi += pad;
   const x = k => m.l + (k + .5) / 4 * (W - m.l - m.r), y = v => m.t + (v - lo) / (hi - lo) * (H - m.t - m.b);
   (rel ? niceTicks(lo, hi, 5) : stepTicks(lo, hi, [5, 10, 15, 30, 60, 120], 6)).forEach(v => { el("line", { x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), class: "grid" }, svg); el("text", { x: m.l - 8, y: y(v) + 4, "text-anchor": "end", text: rel ? (v > 0 ? "+" : v < 0 ? "−" : "") + pct(Math.abs(v)) : ms(v) }, svg); });
@@ -566,29 +600,31 @@ function renderPace() {
     if (W < 620) { el("text", { x: x(k), y: H - m.b + 40, "text-anchor": "middle", text: `+${Math.round(u)} m` }, svg); el("text", { x: x(k), y: H - m.b + 56, "text-anchor": "middle", text: `−${Math.round(dn)} m` }, svg); }
     else el("text", { x: x(k), y: H - m.b + 40, "text-anchor": "middle", text: `+${Math.round(u)} m / −${Math.round(dn)} m` }, svg); });
   const line = (v, c) => el("path", { d: v.map((p, k) => (k ? "L" : "M") + x(k) + "," + y(p)).join(""), style: `fill:none;stroke:${c};stroke-width:2;stroke-linejoin:round;stroke-linecap:round` }, svg);
-  line(ref, "var(--ink-3)");
+  refs.forEach(r => line(r.v, "var(--ink-3)"));
   series.forEach(s => { line(s.v, col(s.r)); s.v.forEach((p, k) => el("circle", { cx: x(k), cy: y(p), r: 4, style: `fill:${col(s.r)};stroke:var(--bg);stroke-width:2` }, svg)); });
-  spread([{ y: y(ref[3]), t: "Mediana" }, ...series.map(s => ({ y: y(s.v[3]), t: first(s.r.i), who: 1 }))], 15, m.t, H - m.b)
+  spread([...refs.map(r => ({ y: y(r.v[3]), t: r.t })), ...series.map(s => ({ y: y(s.v[3]), t: first(s.r.i), who: 1 }))], 15, m.t, H - m.b)
     .forEach(e => { el("line", { x1: x(3) + 8, x2: W - m.r + 8, y1: e.y, y2: e.ly, style: "stroke:var(--rule);stroke-width:1" }, svg); el("text", { x: W - m.r + 12, y: e.ly + 4, class: e.who ? "who" : "lbl", text: e.t }, svg); });
   const missing = sel.filter(r => !val(r.i));
-  $("pace-keys").innerHTML = series.map(s => `<span><i style="background:${col(s.r)}"></i>${esc(title(C.n[s.r.i]))}</span>`).join("") + `<span><i style="background:var(--ink-3)"></i>Mediana general</span>` + (missing.length ? `<span>Sin pasos intermedios: ${missing.map(r => esc(first(r.i))).join(", ")}</span>` : "");
+  $("pace-keys").innerHTML = series.map(s => `<span><i style="background:${col(s.r)}"></i>${esc(title(C.n[s.r.i]))}</span>`).join("") + `<span><i style="background:var(--ink-3)"></i>${refMode === "caj" ? "Mediana de su cajón" : "Mediana general"}</span>` + (missing.length ? `<span>Sin pasos intermedios: ${missing.map(r => esc(first(r.i))).join(", ")}</span>` : "");
   const f = v => rel ? `${v > 0 ? "+" : v < 0 ? "−" : ""}${pct(Math.abs(v), 1)}` : ms(v) + " min/km";
   for (let k = 0; k < 4; k++) {
     const hit = el("rect", { x: x(k) - (W - m.l - m.r) / 8, y: m.t, width: (W - m.l - m.r) / 4, height: H - m.t - m.b, fill: "transparent" }, svg);
-    hover(hit, () => `<div class="t">${SEGX[k]} · +${Math.round(gainLoss(k * 5, k * 5 + 5)[0])} m</div>` + series.map(s => row(first(s.r.i), f(s.v[k]), col(s.r))).join("") + row("Mediana", f(ref[k]), "var(--ink-3)"));
+    hover(hit, () => `<div class="t">${SEGX[k]} · +${Math.round(gainLoss(k * 5, k * 5 + 5)[0])} m</div>` + series.map(s => row(first(s.r.i), f(s.v[k]), col(s.r))).join("") + refs.map(r => row(r.t, f(r.v[k]), "var(--ink-3)")).join(""));
   }
 }
+document.querySelectorAll("#ref-mode button").forEach(b => b.onclick = () => { refMode = b.dataset.v; document.querySelectorAll("#ref-mode button").forEach(x => x.setAttribute("aria-pressed", x === b)); renderClimbs(); renderTable(); renderPace(); renderDist(); });
 document.querySelectorAll("#climb-mode button").forEach(b => b.onclick = () => { climbMode = b.dataset.v; document.querySelectorAll("#climb-mode button").forEach(x => x.setAttribute("aria-pressed", x === b)); renderClimbs(); });
 document.querySelectorAll("#pace-mode button").forEach(b => b.onclick = () => { paceMode = b.dataset.v; document.querySelectorAll("#pace-mode button").forEach(x => x.setAttribute("aria-pressed", x === b)); renderPace(); });
 
 // ---------- distribución ----------
 function renderDist() {
   const host = $("dist"), W = widthOf(host), m = { l: 40, r: 8, t: 8, b: 34 };
-  const ts = order.map(i => C.t[i]), B = 60;
-  const lo = Math.floor(ts[0] / 600) * 600, hi = Math.ceil(ts[Math.floor(ts.length * .999)] / 600) * 600, nb = (hi - lo) / B, cnt = new Array(nb).fill(0);
+  const cajs = refMode === "caj" && sel.length ? [...new Set(sel.map(r => CAJ[r.i]))].sort((a, b) => a - b) : [];
+  const ts = (cajs.length ? order.filter(i => cajs.includes(CAJ[i])) : order).map(i => C.t[i]), B = cajs.length ? 120 : 60;
+  const lo = Math.floor(Math.min(ts[0], ...sel.filter(r => valid(r.i)).map(r => C.t[r.i])) / 600) * 600, hi = Math.ceil(Math.max(ts[Math.floor(ts.length * .999)], ...sel.filter(r => valid(r.i)).map(r => C.t[r.i])) / 600) * 600, nb = Math.ceil((hi - lo) / B), cnt = new Array(nb).fill(0);
   for (const t of ts) { const b = Math.floor((t - lo) / B); if (b >= 0 && b < nb) cnt[b]++; }
   const showing = sel.filter(r => valid(r.i)).sort((a, b) => C.t[a.i] - C.t[b.i]);
-  $("dist-lead").textContent = `Cuántos llegaron en cada minuto, de los ${n0(ts.length)} con tiempo válido.` + (showing.length ? " Cada raya vertical es una persona de la comparación." : "");
+  $("dist-lead").textContent = (cajs.length ? `Cuántos llegaron cada 2 minutos, de los ${n0(ts.length)} ${cajs.length > 1 ? "de los cajones " + cajs.join(", ") : "del cajón " + cajs[0]}.` : `Cuántos llegaron en cada minuto, de los ${n0(ts.length)} con tiempo válido.`) + (showing.length ? " Cada raya vertical es una persona de la comparación." : "");
   const top = m.t + showing.length * 17, Hh = 280 + showing.length * 17, svg = svgIn(host, W, Hh);
   const ymax = Math.max(...cnt) * 1.05;
   const x = t => m.l + (t - lo) / (hi - lo) * (W - m.l - m.r), y = v => Hh - m.b - v / ymax * (Hh - top - m.b);
@@ -622,19 +658,22 @@ function renderClimbs() {
     box.innerHTML = `<h3>${c.n}<span>tramo ${c.tramo}, +${Math.round(up)} m y −${Math.round(dn)} m</span></h3><div class="cv"></div>`;
     host.appendChild(box);
     const cv = box.querySelector(".cv"), W = widthOf(cv), narrow = W < 760, rowH = narrow ? 58 : 34;
-    const md = climbMode, MED = SLOWMED[md][ci], items = sel.map(r => ({ r, st: climbStats(r.i, ci, md) }));
+    const md = climbMode, items = sel.map(r => ({ r, st: climbStats(r.i, ci, md) }));
+    const meds = items.filter(it => it.st).map(it => it.st.med), MED = meds.length ? meds[0] : SLOWMED[md][ci], oneMed = meds.every(v => v === MED);
     const nameW = narrow ? 0 : 130, txtW = narrow ? 0 : 420, top = 22, H = top + items.length * rowH + 8;
-    const vals = items.filter(it => it.st).map(it => it.st.d).concat(MED, 0);
+    const vals = items.filter(it => it.st).map(it => it.st.d).concat(meds, MED, 0);
     const span = Math.max(20, ...vals.map(Math.abs)) * 1.1, lo = Math.min(0, ...vals) < 0 ? -span : -span * .25, hiV = span;
     const x0 = nameW, x1 = W - txtW - 8, x = v => x0 + (v - lo) / (hiV - lo) * (x1 - x0);
     const svg = svgIn(cv, W, H);
     if (!narrow) el("line", { x1: x(0), x2: x(0), y1: top - 6, y2: H - 4, class: "base" }, svg);
     if (x(0) > 100) el("text", { x: x(0) - 6, y: 12, "text-anchor": "end", text: "← más rápido" }, svg);
     el("text", { x: x(0) + 6, y: 12, text: md === "prev" ? "más lento que su ritmo previo →" : "más lento que su media →" }, svg);
-    const mx = x(MED), sgn = v => `${v >= 0 ? "+" : "−"}${Math.round(Math.abs(v))}`;
+    const mx = x(MED), medLabel = refMode === "caj" ? "de su cajón" : "de todos";
+    const sgn = v => `${v >= 0 ? "+" : "−"}${Math.round(Math.abs(v))}`;
     items.forEach(({ r, st }, k) => {
       const y0 = top + k * rowH, cy = y0 + (narrow ? 12 : rowH / 2), name = first(r.i);
-      el("line", { x1: mx, x2: mx, y1: narrow ? cy - 11 : y0, y2: narrow ? cy + 11 : y0 + rowH, style: "stroke:var(--ink-3);stroke-width:2;opacity:.7" }, svg);
+      const rmx = st ? x(st.med) : mx;
+      el("line", { x1: rmx, x2: rmx, y1: narrow ? cy - 11 : y0, y2: narrow ? cy + 11 : y0 + rowH, style: "stroke:var(--ink-3);stroke-width:2;opacity:.7" }, svg);
       if (narrow) el("line", { x1: x(0), x2: x(0), y1: cy - 11, y2: cy + 11, class: "base" }, svg);
       if (!narrow) el("text", { x: 0, y: cy + 4, class: "who", text: name }, svg);
       if (!st) { el("text", { x: x(0) + 8, y: cy + 4, class: "lbl", text: `${narrow ? name + ": " : ""}sin pasos intermedios` }, svg); return; }
@@ -645,9 +684,9 @@ function renderClimbs() {
         : `${sgn(st.d)} s/km · ${g > 0 ? "ganó " + n0(g) : g < 0 ? "perdió " + n0(-g) : "mantuvo"} ${Math.abs(g) === 1 ? "puesto" : g ? "puestos" : "el puesto"} · aguantó mejor que el ${pct(st.better)}`;
       el("text", narrow ? { x: 0, y: cy + 30, class: "lbl", text: `${name}: ${txt}` } : { x: W - txtW + 8, y: cy + 4, class: "lbl", text: txt }, svg);
       const hit = el("rect", { x: 0, y: y0, width: W, height: rowH, fill: "transparent" }, svg);
-      hover(hit, () => `<div class="t">${esc(title(C.n[r.i]))} · ${c.n}</div>` + row("Ritmo en el tramo", ms(st.pace) + " min/km", col(r)) + row("Ritmo hasta la cuesta", `${ms(st.prevPace)} min/km (${sgn(st.dPrev)} s/km)`) + row("Ritmo medio total", `${ms(C.t[r.i] / KM)} min/km (${sgn(st.dAvg)} s/km)`) + row("Mediana de todos", `${sgn(MED)} s/km`) + row("Puestos en el tramo", `${g > 0 ? "+" : g < 0 ? "−" : ""}${n0(Math.abs(g))}`) + row("Cayó menos que", pct(st.better) + " de la carrera"));
+      hover(hit, () => `<div class="t">${esc(title(C.n[r.i]))} · ${c.n}</div>` + row("Ritmo en el tramo", ms(st.pace) + " min/km", col(r)) + row("Ritmo hasta la cuesta", `${ms(st.prevPace)} min/km (${sgn(st.dPrev)} s/km)`) + row("Ritmo medio total", `${ms(C.t[r.i] / KM)} min/km (${sgn(st.dAvg)} s/km)`) + row(refMode === "caj" ? `Mediana del cajón ${CAJ[r.i]}` : "Mediana de todos", `${sgn(st.med)} s/km`) + row("Puestos en el tramo", `${g > 0 ? "+" : g < 0 ? "−" : ""}${n0(Math.abs(g))}`) + row("Cayó menos que", pct(st.better) + (refMode === "caj" ? " de su cajón" : " de la carrera")));
     });
-    el("text", { x: Math.min(Math.max(mx, 80), W - 80), y: H + 12, "text-anchor": "middle", text: `mediana de todos ${sgn(MED)} s/km` }, svg);
+    el("text", { x: Math.min(Math.max(mx, 80), W - 80), y: H + 12, "text-anchor": "middle", text: oneMed ? `mediana ${medLabel} ${sgn(MED)} s/km` : "raya gris: mediana de su cajón" }, svg);
     svg.setAttribute("viewBox", `0 0 ${W} ${H + 16}`);
   });
 }
@@ -696,7 +735,7 @@ async function storyBlob() {
     font(650, 38); text(fit(title(C.n[i]), W - 2 * P - 44 - tw - 24), P + 44, y, K.ink);
     const st = CLIMBS.map((cl, ci) => climbStats(i, ci));
     const sg = v => `${v >= 0 ? "+" : "−"}${Math.round(Math.abs(v))}`;
-    const l2 = valid(i) ? `Puesto ${n0(rankAll[i])} · ${ms(C.t[i] / KM)} min/km${roomy ? "" : st[0] ? ` · Miracruz ${sg(st[2].d)} s/km` : ""}` : "Sin tiempo válido";
+    const l2 = valid(i) ? `Puesto ${n0(rankAll[i])} · cajón ${CAJ[i]} · ${ms(C.t[i] / KM)} min/km${roomy ? "" : st[0] ? ` · Miracruz ${sg(st[2].d)} s/km` : ""}` : "Sin tiempo válido";
     font(400, 28); text(fit(l2, W - 2 * P - 44), P + 44, y + 42, K.ink2);
     if (roomy && st[0]) text(fit(`Cuestas: ${["Gaintx.", "Kaputx.", "Miracruz"].map((n, ci) => `${n} ${sg(st[ci].d)}`).join(" · ")} s/km`, W - 2 * P - 44), P + 44, y + 82, K.ink2);
     y += rowH;
@@ -715,14 +754,14 @@ function storyOne(g, K, W, P, font, text, fit, c) {
   font(600, 30, true); text("Behobia – San Sebastián 2026", P, 290, K.ink2);
   g.fillStyle = c; g.fillRect(P, 318, 30, 30);
   font(800, 64, true); text(fit(title(C.n[i]), W - 2 * P - 46), P + 46, 350, K.ink);
-  font(400, 28); text(fit(`Dorsal ${C.d[i]} · ${title(GCATS[C.g[i]])} · ${title(TOWNS[C.o[i]])}`, W - 2 * P), P, 396, K.ink2);
+  font(400, 28); text(fit(`Dorsal ${C.d[i]} · ${title(GCATS[C.g[i]])} · ${title(TOWNS[C.o[i]])} · cajón ${CAJ[i]}`, W - 2 * P), P, 396, K.ink2);
   if (!ok) { font(700, 120, true); text("Sin tiempo válido", P, 600, K.ink); font(400, 28); text("No figura con tiempo en la clasificación oficial.", P, 650, K.ink2); return footer(1650); }
   // tiempo y puestos
   font(800, 190, true); text(hms(C.t[i]), P - 6, 590, K.ink); const tw = g.measureText(hms(C.t[i])).width;
   font(400, 30); text(`${ms(C.t[i] / KM)} min/km · por delante del ${(b => pct(b, b > .99 && b < 1 ? 1 : 0))(better(rankAll[i], order.length))} de la carrera`, P, 640, K.ink2);
   const sx = Math.max(P + tw + 40, 640);
-  [[n0(rankAll[i]), `de ${n0(order.length)}, general`], [n0(rankSex[i]), `de ${n0(cntSex[C.s[i]])}, ${C.s[i] ? "mujeres" : "hombres"}`], [n0(rankCat[i]), `de ${n0(catTot)}, ${title(GCATS[C.g[i]])}`]].forEach(([v, l], k) => {
-    const yy = 460 + k * 62; font(750, 46, true); text(v + "º", sx, yy, K.ink); const vw = g.measureText(v + "º").width; font(400, 24); text(fit(l, W - P - sx - vw - 12), sx + vw + 12, yy, K.ink2);
+  [[n0(rankAll[i]), `de ${n0(order.length)}, general`], [n0(rankSex[i]), `de ${n0(cntSex[C.s[i]])}, ${C.s[i] ? "mujeres" : "hombres"}`], [n0(rankCat[i]), `de ${n0(catTot)}, ${title(GCATS[C.g[i]])}`], [n0(rankCaj[i]), `de ${n0(cntCaj[CAJ[i]])}, cajón ${CAJ[i]}`]].forEach(([v, l], k) => {
+    const yy = 452 + k * 52; font(750, 46, true); text(v + "º", sx, yy, K.ink); const vw = g.measureText(v + "º").width; font(400, 24); text(fit(l, W - P - sx - vw - 12), sx + vw + 12, yy, K.ink2);
   });
   // perfil con su ritmo por tramo y su paso estimado por los altos
   rule(684);
@@ -733,8 +772,8 @@ function storyOne(g, K, W, P, font, text, fit, c) {
   font(400, 22); text("Ritmo por tramo", P, 968, K.ink3);
   [0, 1, 2, 3].forEach(k => { const mid = X(k * 5 + 2.5); font(700, 34, true); text(sp ? ms(sp[k] / 5) : "–", mid, 1008, K.ink, "center"); font(400, 20); const [u, dn] = gainLoss(k * 5, k * 5 + 5); text(`+${Math.round(u)} / −${Math.round(dn)} m`, mid, 1036, K.ink3, "center"); });
   // pasos y puesto en cada control
-  rule(1066); label("Pasos", 1112);
-  const cps = cpTimes(i), rks = [rankCP.t5[i], rankCP.t10[i], rankCP.t15[i], rankAll[i]];
+  rule(1066); label("Pasos", 1112); if (refMode === "caj") { font(400, 20); text(`puestos dentro del cajón ${CAJ[i]}`, W - P, 1112, K.ink3, "right"); }
+  const cps = cpTimes(i), rks = ranksOf(i);
   const css2 = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim(), UP = css2("--up"), DOWN = css2("--down");
   ["Km 5", "Km 10", "Km 15", "Meta"].forEach((l, k) => {
     const x = P + k * (W - 2 * P) / 4; font(400, 22); text(l, x, 1152, K.ink3); font(650, 34, true); text(cps[k] ? hms(cps[k]) : "–", x, 1192, K.ink);
@@ -745,12 +784,12 @@ function storyOne(g, K, W, P, font, text, fit, c) {
     }
   });
   // cuestas, frente a la mediana
-  rule(1250); label("En las cuestas", 1292); font(400, 20); text("s/km frente a su ritmo hasta la cuesta", W - P, 1292, K.ink3, "right");
+  rule(1250); label("En las cuestas", 1292); font(400, 20); text(`s/km frente a su ritmo hasta la cuesta${refMode === "caj" ? " · mediana de su cajón" : ""}`, W - P, 1292, K.ink3, "right");
   CLIMBS.forEach((cl, ci) => {
     const st = climbStats(i, ci, "prev"), yy = 1334 + ci * 56; font(650, 24); text(cl.n, P, yy, K.ink);
     if (!st) { font(400, 22); text("sin pasos intermedios", P + 230, yy, K.ink2); return; }
     const sg = v => `${v >= 0 ? "+" : "−"}${Math.round(Math.abs(v))}`, g2 = st.gained;
-    font(400, 22); text(fit(`${sg(st.d)} s/km (mediana ${sg(SLOWMED.prev[ci])}) · ${g2 > 0 ? "ganó " + n0(g2) : g2 < 0 ? "perdió " + n0(-g2) : "mantuvo"} ${Math.abs(g2) === 1 ? "puesto" : "puestos"} · mejor que el ${pct(st.better)}`, W - 2 * P - 230), P + 230, yy, K.ink2);
+    font(400, 22); text(fit(`${sg(st.d)} s/km (mediana ${sg(st.med)}) · ${g2 > 0 ? "ganó " + n0(g2) : g2 < 0 ? "perdió " + n0(-g2) : "mantuvo"} ${Math.abs(g2) === 1 ? "puesto" : "puestos"} · mejor que el ${pct(st.better)}`, W - 2 * P - 230), P + 230, yy, K.ink2);
     const bx = P + 230, bw = W - P - bx, by = yy + 12; g.fillStyle = K.rule; g.fillRect(bx, by, bw, 8); g.fillStyle = c; g.fillRect(bx, by, bw * st.better, 8);
   });
   // dónde queda entre todos
