@@ -755,10 +755,14 @@ function storyOne(g, K, W, P, font, text, fit, c) {
   font(400, 28); text(fit(`Dorsal ${C.d[i]} · ${title(GCATS[C.g[i]])} · ${title(TOWNS[C.o[i]])} · cajón ${CAJ[i]}`, W - 2 * P), P, 396, K.ink2);
   if (!ok) { font(700, 120, true); text("Sin tiempo válido", P, 600, K.ink); font(400, 28); text("No figura con tiempo en la clasificación oficial.", P, 650, K.ink2); return footer(1650); }
   // tiempo y puestos
-  font(800, 190, true); text(hms(C.t[i]), P - 6, 590, K.ink); const tw = g.measureText(hms(C.t[i])).width;
+  const stats = [[n0(rankAll[i]), `de ${n0(order.length)}, general`], [n0(rankSex[i]), `de ${n0(cntSex[C.s[i]])}, ${C.s[i] ? "mujeres" : "hombres"}`], [n0(rankCat[i]), `de ${n0(catTot)}, ${title(GCATS[C.g[i]])}`], [n0(rankCaj[i]), `de ${n0(cntCaj[CAJ[i]])}, cajón ${CAJ[i]}`]];
+  const rowW = ([v, l]) => { font(750, 46, true); const a = g.measureText(v + "º").width; font(400, 24); return a + 12 + g.measureText(l).width; };
+  const need = Math.max(...stats.map(rowW));
+  let tsz = 190, tw; do { font(800, tsz, true); tw = g.measureText(hms(C.t[i])).width; if (P + tw + 40 + need <= W - P) break; tsz -= 6; } while (tsz > 120);
+  text(hms(C.t[i]), P - 6, 590, K.ink);
   font(400, 30); text(`${ms(C.t[i] / KM)} min/km · por delante del ${(b => pct(b, b > .99 && b < 1 ? 1 : 0))(better(rankAll[i], order.length))} de la carrera`, P, 640, K.ink2);
-  const sx = Math.max(P + tw + 40, 640);
-  [[n0(rankAll[i]), `de ${n0(order.length)}, general`], [n0(rankSex[i]), `de ${n0(cntSex[C.s[i]])}, ${C.s[i] ? "mujeres" : "hombres"}`], [n0(rankCat[i]), `de ${n0(catTot)}, ${title(GCATS[C.g[i]])}`], [n0(rankCaj[i]), `de ${n0(cntCaj[CAJ[i]])}, cajón ${CAJ[i]}`]].forEach(([v, l], k) => {
+  const sx = Math.max(P + tw + 40, Math.min(640, W - P - need));
+  stats.forEach(([v, l], k) => {
     const yy = 452 + k * 52; font(750, 46, true); text(v + "º", sx, yy, K.ink); const vw = g.measureText(v + "º").width; font(400, 24); text(fit(l, W - P - sx - vw - 12), sx + vw + 12, yy, K.ink2);
   });
   // perfil con su ritmo por tramo y su paso estimado por los altos
@@ -791,8 +795,10 @@ function storyOne(g, K, W, P, font, text, fit, c) {
     const bx = P + 230, bw = W - P - bx, by = yy + 12; g.fillStyle = K.rule; g.fillRect(bx, by, bw, 8); g.fillStyle = c; g.fillRect(bx, by, bw * st.better, 8);
   });
   // dónde queda entre todos
-  rule(1500); label("Entre todos los que llegaron", 1546);
-  const ts = order.map(j => C.t[j]), lo = Math.floor(ts[0] / 600) * 600, hi = Math.ceil(ts[Math.floor(ts.length * .999)] / 600) * 600, B = 60, nb = (hi - lo) / B, cnt = new Array(nb).fill(0);
+  const inCaj = refMode === "caj", ts = (inCaj ? order.filter(j => CAJ[j] === CAJ[i]) : order).map(j => C.t[j]);
+  rule(1500); label(inCaj ? `Entre los ${n0(ts.length)} del cajón ${CAJ[i]}` : "Entre todos los que llegaron", 1546);
+  { const b = (inCaj ? rankCaj[i] : rankAll[i]), tot = ts.length; font(400, 20); text(`llegó por delante del ${(v => pct(v, v > .99 && v < 1 ? 1 : 0))(better(b, tot))}`, W - P, 1546, K.ink3, "right"); }
+  const B = inCaj ? 120 : 60, lo = Math.floor(Math.min(ts[0], C.t[i]) / 600) * 600, hi = Math.ceil(Math.max(ts[Math.floor(ts.length * .999)], C.t[i]) / 600) * 600, nb = Math.ceil((hi - lo) / B), cnt = new Array(nb).fill(0);
   for (const t of ts) { const b = Math.floor((t - lo) / B); if (b >= 0 && b < nb) cnt[b]++; }
   const hx = t => P + (t - lo) / (hi - lo) * (W - 2 * P), hTop = 1562, hBase = 1622, mx = Math.max(...cnt);
   g.fillStyle = K.ink3; g.globalAlpha = .35; g.beginPath(); g.moveTo(hx(lo), hBase); cnt.forEach((v, b) => g.lineTo(hx(lo + (b + .5) * B), hBase - v / mx * (hBase - hTop))); g.lineTo(hx(hi), hBase); g.closePath(); g.fill(); g.globalAlpha = 1;
