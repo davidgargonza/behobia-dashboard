@@ -46,6 +46,10 @@ CAT_MAP = {"JUNIOR M": "JUNIOR", "JUNIOR F": "JUNIOR", "PROMESA M": "PROMESA", "
            "VETERANO II": "VETERANO/A II", "VETERANA II": "VETERANO/A II", "VETERANO III": "VETERANO/A III",
            "VETERANA III": "VETERANO/A III", "VETERANO IV": "VETERANO/A IV", "VETERANA IV": "VETERANO/A IV"}
 
+# Cajones: primer dorsal y hora prevista (dossier técnico oficial 2026, pág. 12; rangos deducidos de los datos)
+CAJ_FROM = [1, 501, 1701, 3201, 4901, 6701, 8401, 10101, 11801, 14001, 15601, 17201, 19001, 20801, 22601, 24401, 26201, 28001, 29801]
+CAJ_PREV = ["10:00", "10:01", "10:02", "10:04", "10:07", "10:10", "10:13", "10:19", "10:26", "10:29", "10:35", "10:42", "10:45", "10:49", "10:58", "11:05", "11:15", "11:25", "11:35"]
+
 def sec(t):
     if not t or t == "00:00:00":
         return 0
@@ -91,9 +95,25 @@ def main():
             cols[k].append(v if valid and 0 < v < t else 0)
         cols["st"].append(st)
         cols["pos"].append(int(r["pos"]) if r["pos"] not in ("", "0") else 0)
+    # Cajón desde el que salió cada corredor: el de su dorsal, salvo que cruzara la alfombra fuera de la
+    # ventana de ese cajón; entonces, el último cajón que ya se había abierto cuando cruzó.
+    import bisect
+    from collections import defaultdict
+    by = defaultdict(list)
+    for d, st in zip(cols["d"], cols["st"]):
+        if st: by[bisect.bisect_right(CAJ_FROM, d)].append(st)
+    opens = [sorted(by[g])[int(.02 * (len(by[g]) - 1))] for g in range(1, len(CAJ_FROM) + 1)]
+    opens[0] = 10 * 3600   # el cajón 1 (élite) sale a las 10:00
+    cols["cj"] = []
+    for d, st in zip(cols["d"], cols["st"]):
+        g = bisect.bisect_right(CAJ_FROM, d)
+        if st and not (opens[g - 1] - 30 <= st <= (opens[g] if g < len(opens) else 10 ** 9) + 180):
+            g = max(1, bisect.bisect_right(opens, st))
+        cols["cj"].append(g)
+    cajones = [{"desde": f, "prevista": p, "real": f"{o // 3600}:{o % 3600 // 60:02d}"} for f, p, o in zip(CAJ_FROM, CAJ_PREV, opens)]
     gcats = sorted(set(cols["g"]))
     cols["g"] = [gcats.index(g) for g in cols["g"]]
-    out = {"meta": {"edicion": 61, "fecha": "2026-11-08", "distancia_km": 20,
+    out = {"cajones": cajones, "meta": {"edicion": 61, "fecha": "2026-11-08", "distancia_km": 20,
                     "fuente": "clasificacion.behobia-sansebastian.com (clasificación oficial)"},
            "cats": cats, "gcats": gcats, "towns": towns, "provs": provs, "ccaas": ccaas, "cols": cols}
     (ROOT / "data/dashboard.json").write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")

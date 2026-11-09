@@ -268,7 +268,7 @@ footer button { border: 0; background: none; padding: 0; text-decoration: underl
 
   <footer>
     <p>Datos de la clasificación oficial de clasificacion.behobia-sansebastian.com, descargada el 8 de noviembre de 2026. La organización aún la marca como provisional, así que puede cambiar. La hora de cruce de la salida sale de la clasificación en directo.</p>
-    <p>Los cajones son los 19 grupos de salida del dossier oficial. Cada corredor se asigna por su dorsal; los rangos se deducen de la hora de paso por la alfombra de salida (solo un 0,3 % la cruzó antes de la hora de su cajón).</p>
+    <p>Los cajones son los 19 grupos de salida del dossier oficial. A cada corredor le corresponde uno por su dorsal, pero unos 4.100 salieron desde un cajón posterior: si alguien cruzó la alfombra fuera de la ventana de su cajón, se le asigna el que ya se había abierto en ese momento. La hora de salida de cada cajón es la real, cuando empezó a cruzar la alfombra (los últimos salieron unos 5 minutos después de lo previsto).</p>
     <p>El perfil está digitalizado del dossier técnico oficial de 2026 (página 11). Sale un desnivel positivo de 193 m frente a los 192 m oficiales, y el punto más alto, 80 m en el km 7,3, coincide con el dato oficial.</p>
     <p>Los puestos se cuentan entre los 26.036 clasificados con tiempo; quienes no se clasificaron aparecen en el buscador sin tiempo. La provincia sale de cruzar el municipio con el listado del INE.</p>
   </footer>
@@ -296,13 +296,11 @@ order.forEach((i, k) => { rankAll[i] = k + 1; rankSex[i] = ++cntSex[C.s[i]]; con
 const CP = ["t5", "t10", "t15"], rankCP = {};
 for (const k of CP) { rankCP[k] = new Int32Array(N); order.filter(i => C[k][i] > 0).sort((a, b) => C[k][a] - C[k][b]).forEach((i, j) => rankCP[k][i] = j + 1); }
 const cpTimes = i => [C.t5[i] || 0, C.t10[i] || 0, C.t15[i] || 0, C.t[i]];
-// Cajones (grupos de salida): primer dorsal y hora de salida de cada uno. Las horas son las del dossier técnico
-// oficial 2026 (pág. 12); los rangos de dorsales se deducen de la hora de paso por la alfombra de salida.
-const CAJONES = [[1, "10:00"], [501, "10:01"], [1701, "10:02"], [3201, "10:04"], [4901, "10:07"], [6701, "10:10"], [8401, "10:13"], [10101, "10:19"], [11801, "10:26"], [14001, "10:29"],
-  [15601, "10:35"], [17201, "10:42"], [19001, "10:45"], [20801, "10:49"], [22601, "10:58"], [24401, "11:05"], [26201, "11:15"], [28001, "11:25"], [29801, "11:35"]];
-const cajonOf = d => { let g = 0; while (g + 1 < CAJONES.length && d >= CAJONES[g + 1][0]) g++; return g + 1; };
-const CAJ = Int8Array.from(C.d, cajonOf);
-const cajLabel = g => `cajón ${g} (salida ${CAJONES[g - 1][1]})`;
+// Cajón desde el que salió cada corredor (calculado en build_data.py): el de su dorsal, o el que ya
+// estaba abierto cuando cruzó la alfombra si lo hizo fuera de la ventana de su cajón.
+const CAJONES = RAW.cajones;   // [{desde, prevista, real}]
+const CAJ = Int8Array.from(C.cj);
+const cajLabel = g => `cajón ${g} (salida ${CAJONES[g - 1].real})`;
 const rankCaj = new Int32Array(N), cntCaj = new Int32Array(CAJONES.length + 1);
 order.forEach(i => rankCaj[i] = ++cntCaj[CAJ[i]]);
 const rankCPc = {};
@@ -551,7 +549,7 @@ function renderTable() {
     ["g", "Quién"],
     ["Categoría", i => [title(GCATS[C.g[i]]), null]],
     ["Procedencia", i => [`${title(TOWNS[C.o[i]])} (${PROVS[C.p[i]]})`, null]],
-    ["Cajón de salida", i => [`${CAJ[i]} (salida ${CAJONES[CAJ[i] - 1][1]})`, null]],
+    ["Cajón de salida", i => [`${CAJ[i]} (salida ${CAJONES[CAJ[i] - 1].real})`, null]],
     ["Cruzó la salida a las", i => [C.st[i] ? hms(C.st[i]) : "–", null]],
     ["g", "Resultado"],
     ["Tiempo neto", i => [fmt(C.t[i]), C.t[i] || null]],
