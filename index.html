@@ -245,6 +245,13 @@ footer button { border: 0; background: none; padding: 0; text-decoration: underl
     <div id="climbs"></div>
   </section>
 
+  <section aria-labelledby="h-gain" id="gain-sec">
+    <h2 id="h-gain">Puestos ganados o perdidos en cada tramo</h2>
+    <p class="lead" id="gain-lead"></p>
+    <div class="chart" id="gain"></div>
+    <div class="keys" id="gain-keys"></div>
+  </section>
+
   <section aria-labelledby="h-table" id="table-sec">
     <h2 id="h-table">Tiempos de paso</h2>
     <p class="lead">En negrita, el mejor de cada fila. Los puestos de los km 5, 10 y 15 se cuentan entre quienes tienen ese paso registrado. El cronometraje solo mide los km 5, 10 y 15: el paso por los altos es una estimación que supone ritmo constante dentro de cada tramo.</p>
@@ -448,10 +455,10 @@ function pick(i) { if (sel.some(r => r.i === i)) return; add(i); q.value = ""; m
 // ---------- render ----------
 function render(resetClock) {
   writeHash();
-  $("table-sec").hidden = $("climb-sec").hidden = $("refbar").hidden = !sel.length;
+  $("table-sec").hidden = $("climb-sec").hidden = $("gain-sec").hidden = $("refbar").hidden = !sel.length;
   const ref = refRunner();
   if (resetClock && ref) T = C.t[ref.i];
-  renderRoad(); renderClimbs(); renderTable(); renderPace(); renderDist();
+  renderRoad(); renderClimbs(); renderGains(); renderTable(); renderPace(); renderDist();
 }
 
 // ---------- la carretera ----------
@@ -610,9 +617,51 @@ function renderPace() {
     hover(hit, () => `<div class="t">${SEGX[k]} · +${Math.round(gainLoss(k * 5, k * 5 + 5)[0])} m</div>` + series.map(s => row(first(s.r.i), f(s.v[k]), col(s.r))).join("") + refs.map(r => row(r.t, f(r.v[k]), "var(--ink-3)")).join(""));
   }
 }
-document.querySelectorAll("#ref-mode button").forEach(b => b.onclick = () => { refMode = b.dataset.v; document.querySelectorAll("#ref-mode button").forEach(x => x.setAttribute("aria-pressed", x === b)); renderClimbs(); renderTable(); renderPace(); renderDist(); });
+document.querySelectorAll("#ref-mode button").forEach(b => b.onclick = () => { refMode = b.dataset.v; document.querySelectorAll("#ref-mode button").forEach(x => x.setAttribute("aria-pressed", x === b)); renderClimbs(); renderGains(); renderTable(); renderPace(); renderDist(); });
 document.querySelectorAll("#climb-mode button").forEach(b => b.onclick = () => { climbMode = b.dataset.v; document.querySelectorAll("#climb-mode button").forEach(x => x.setAttribute("aria-pressed", x === b)); renderClimbs(); });
 document.querySelectorAll("#pace-mode button").forEach(b => b.onclick = () => { paceMode = b.dataset.v; document.querySelectorAll("#pace-mode button").forEach(x => x.setAttribute("aria-pressed", x === b)); renderPace(); });
+
+// ---------- puestos ganados por tramo ----------
+const gainCache = {};
+function gainMedian(g) {   // mediana de puestos ganados en cada tramo (km 5-10, 10-15, 15-meta); g = 0 toda la carrera
+  if (gainCache[g]) return gainCache[g];
+  const md = g ? "caj" : "all", pop = g ? order.filter(i => CAJ[i] === g) : order;
+  return gainCache[g] = [0, 1, 2].map(k => median(pop.map(i => ranksOf(i, md)).filter(r => r[k] && r[k + 1]).map(r => r[k] - r[k + 1])));
+}
+const gainsOf = i => { if (!valid(i)) return null; const r = ranksOf(i); return [0, 1, 2].map(k => r[k] && r[k + 1] ? r[k] - r[k + 1] : null); };
+const GX = ["Km 5 a 10", "Km 10 a 15", "Km 15 a meta"];
+function renderGains() {
+  const host = $("gain"); if (!sel.length) { host.innerHTML = ""; return; }
+  const W = widthOf(host), H = 300, m = { l: 56, r: 112, t: 22, b: 34 }, narrow = W < 620;
+  const svg = svgIn(host, W, H + (narrow ? 34 : 18));
+  const series = sel.map(r => ({ r, v: gainsOf(r.i) })).filter(s => s.v && s.v.some(v => v != null));
+  const scopes = refMode === "caj" ? [...new Set(sel.map(r => CAJ[r.i]))].sort((a, b) => a - b) : [0];
+  const refs = scopes.map(g => ({ g, v: gainMedian(g), t: g ? `Mediana caj. ${g}` : "Mediana" }));
+  $("gain-lead").textContent = refMode === "caj"
+    ? "Puestos ganados (arriba) o perdidos (abajo) entre un control y el siguiente, contando solo a los de su cajón. En gris, lo que ganó la persona mediana de cada cajón."
+    : "Puestos ganados (arriba) o perdidos (abajo) entre un control y el siguiente. En gris, lo que ganó la persona mediana de la carrera: la mayoría gana unos pocos puestos y una minoría pierde muchos, por eso la mediana es positiva.";
+  const all = series.flatMap(s => s.v.filter(v => v != null)).concat(refs.flatMap(r => r.v), 0);
+  let lo = Math.min(...all), hi = Math.max(...all); const pad = (hi - lo) * .12 || 5; lo -= pad; hi += pad;
+  const x = k => m.l + (k + .5) / 3 * (W - m.l - m.r), y = v => m.t + (hi - v) / (hi - lo) * (H - m.t - m.b);
+  niceTicks(lo, hi, 5).forEach(v => { el("line", { x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), class: v === 0 ? "base" : "grid" }, svg); el("text", { x: m.l - 8, y: y(v) + 4, "text-anchor": "end", text: (v > 0 ? "+" : v < 0 ? "−" : "") + n0(Math.abs(v)) }, svg); });
+  el("text", { x: m.l, y: 8, text: "↑ gana puestos" }, svg);
+  GX.forEach((l, k) => { el("text", { x: x(k), y: H - m.b + 22, "text-anchor": "middle", class: "lbl", text: narrow ? ["5–10", "10–15", "15–20"][k] : l }, svg);
+    const [u, dn] = gainLoss((k + 1) * 5, (k + 2) * 5);
+    if (narrow) { el("text", { x: x(k), y: H - m.b + 40, "text-anchor": "middle", text: `+${Math.round(u)} m` }, svg); el("text", { x: x(k), y: H - m.b + 56, "text-anchor": "middle", text: `−${Math.round(dn)} m` }, svg); }
+    else el("text", { x: x(k), y: H - m.b + 40, "text-anchor": "middle", text: `+${Math.round(u)} m / −${Math.round(dn)} m` }, svg); });
+  const line = (v, c) => { let d = "", pen = false; v.forEach((p, k) => { if (p == null) { pen = false; return; } d += (pen ? "L" : "M") + x(k) + "," + y(p); pen = true; }); el("path", { d, style: `fill:none;stroke:${c};stroke-width:2;stroke-linejoin:round;stroke-linecap:round` }, svg); };
+  refs.forEach(r => line(r.v, "var(--ink-3)"));
+  series.forEach(s => { line(s.v, col(s.r)); s.v.forEach((p, k) => p != null && el("circle", { cx: x(k), cy: y(p), r: 4, style: `fill:${col(s.r)};stroke:var(--bg);stroke-width:2` }, svg)); });
+  const refEnds = refs.length > 1 ? [{ y: y(refs.reduce((a, r) => a + r.v[2], 0) / refs.length), t: narrow ? "Medianas" : "Medianas cajones" }] : refs.map(r => ({ y: y(r.v[2]), t: r.t }));
+  const ends = [...refEnds, ...series.filter(s => s.v[2] != null).map(s => ({ y: y(s.v[2]), t: first(s.r.i), who: 1 }))];
+  spread(ends, 15, m.t, H - m.b).forEach(e => { el("line", { x1: x(2) + 8, x2: W - m.r + 8, y1: e.y, y2: e.ly, style: "stroke:var(--rule);stroke-width:1" }, svg); el("text", { x: W - m.r + 12, y: e.ly + 4, class: e.who ? "who" : "lbl", text: e.t }, svg); });
+  $("gain-keys").innerHTML = series.map(s => `<span><i style="background:${col(s.r)}"></i>${esc(title(C.n[s.r.i]))}</span>`).join("") + `<span><i style="background:var(--ink-3)"></i>${refMode === "caj" ? "Mediana de su cajón" : "Mediana general"}</span>`;
+  const f = v => v == null ? "–" : `${v > 0 ? "+" : v < 0 ? "−" : ""}${n0(Math.abs(v))}`;
+  for (let k = 0; k < 3; k++) {
+    const hit = el("rect", { x: x(k) - (W - m.l - m.r) / 6, y: m.t, width: (W - m.l - m.r) / 3, height: H - m.t - m.b, fill: "transparent" }, svg);
+    hover(hit, () => `<div class="t">${GX[k]}${refMode === "caj" ? " · dentro de su cajón" : ""}</div>` + series.map(s => row(first(s.r.i), f(s.v[k]) + " puestos", col(s.r))).join("") + refs.map(r => row(r.t, f(r.v[k]), "var(--ink-3)")).join(""));
+  }
+}
 
 // ---------- distribución ----------
 function renderDist() {
