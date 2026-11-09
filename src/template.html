@@ -38,6 +38,8 @@
   --float: #F7F7F5;          /* lo único que flota: desplegable y tooltip */
   /* Identidad de cada corredor: paleta categórica validada para daltonismo, en orden fijo */
   --r1: #2a78d6; --r2: #eb6834; --r3: #1baf7a; --r4: #eda100; --r5: #e87ba4; --r6: #008300;
+  /* puestos ganados / perdidos: siempre con flecha y número, nunca solo color */
+  --up: #006300; --down: #a8261f;
 
   /* Escala tipográfica (8 tamaños) */
   --t-12: 12px; --t-13: 13px; --t-15: 15px; --t-17: 17px; --t-22: 22px; --t-30: 30px; --t-44: 44px; --t-64: 64px;
@@ -52,6 +54,7 @@
     --bg: #151719; --asphalt: #2E3136; --paint: #C9CBC6;
     --ink: #ECEDE9; --ink-2: #B9BCB6; --ink-3: #9A9E99; --rule: #33363A; --float: #202326;
     --r1: #3987e5; --r2: #d95926; --r3: #199e70; --r4: #c98500; --r5: #d55181; --r6: #2f9e2f;
+    --up: #2fbf2f; --down: #f07a7a;
   }
 }
 * { box-sizing: border-box; }
@@ -332,7 +335,7 @@ function climbStats(i, ci, md = "prev") {
   const c = CLIMBS[ci], r = relSlow(i, c.seg, md), arr = SLOWSORT[md][ci];
   let lo = 0, hi = arr.length; while (lo < hi) { const m = (lo + hi) >> 1; arr[m] <= r ? lo = m + 1 : hi = m; }
   return { d: slow(i, c.seg, md), dPrev: slow(i, c.seg, "prev"), dAvg: slow(i, c.seg, "avg"), better: (arr.length - lo) / arr.length,
-    gained: rankS[c.seg - 1][i] - rankS[c.seg][i], pace: segs(i)[c.seg] / 5, prevPace: basePace(i, c.seg, "prev") };
+    gained: (k => { const rk = [rankCP.t5[i], rankCP.t10[i], rankCP.t15[i], rankAll[i]]; return rk[k - 1] && rk[k] ? rk[k - 1] - rk[k] : 0; })(c.seg), pace: segs(i)[c.seg] / 5, prevPace: basePace(i, c.seg, "prev") };
 }
 
 // ---------- formato ----------
@@ -732,7 +735,15 @@ function storyOne(g, K, W, P, font, text, fit, c) {
   // pasos y puesto en cada control
   rule(1066); label("Pasos", 1112);
   const cps = cpTimes(i), rks = [rankCP.t5[i], rankCP.t10[i], rankCP.t15[i], rankAll[i]];
-  ["Km 5", "Km 10", "Km 15", "Meta"].forEach((l, k) => { const x = P + k * (W - 2 * P) / 4; font(400, 22); text(l, x, 1152, K.ink3); font(650, 34, true); text(cps[k] ? hms(cps[k]) : "–", x, 1192, K.ink); font(400, 22); text(rks[k] ? `${n0(rks[k])}º` : "", x, 1222, K.ink2); });
+  const css2 = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim(), UP = css2("--up"), DOWN = css2("--down");
+  ["Km 5", "Km 10", "Km 15", "Meta"].forEach((l, k) => {
+    const x = P + k * (W - 2 * P) / 4; font(400, 22); text(l, x, 1152, K.ink3); font(650, 34, true); text(cps[k] ? hms(cps[k]) : "–", x, 1192, K.ink);
+    font(400, 24); const rt = rks[k] ? `${n0(rks[k])}º` : ""; text(rt, x, 1226, K.ink2);
+    if (k && rks[k] && rks[k - 1]) {   // cambio de puesto desde el control anterior
+      const d = rks[k - 1] - rks[k], rx = x + g.measureText(rt).width + 12;
+      font(650, 24); text(d > 0 ? `▲ ${n0(d)}` : d < 0 ? `▼ ${n0(-d)}` : "= 0", rx, 1226, d > 0 ? UP : d < 0 ? DOWN : K.ink3);
+    }
+  });
   // cuestas, frente a la mediana
   rule(1250); label("En las cuestas", 1292); font(400, 20); text("s/km frente a su ritmo hasta la cuesta", W - P, 1292, K.ink3, "right");
   CLIMBS.forEach((cl, ci) => {
