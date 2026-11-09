@@ -394,6 +394,18 @@ function svgIn(host, w, h) { host.innerHTML = ""; const s = el("svg", { viewBox:
 const widthOf = node => Math.max(280, Math.round(node.clientWidth || 600));
 function niceTicks(lo, hi, n = 5) { const span = hi - lo || 1, s0 = span / n, mag = 10 ** Math.floor(Math.log10(s0)), e = s0 / mag; const st = (e >= 7.5 ? 10 : e >= 3.5 ? 5 : e >= 1.5 ? 2 : 1) * mag; const o = []; for (let v = Math.ceil(lo / st) * st; v <= hi + 1e-9; v += st) o.push(+v.toFixed(10)); return o; }
 function stepTicks(lo, hi, steps, n) { const st = steps.find(s => (hi - lo) / s <= n) || steps[steps.length - 1]; const o = []; for (let v = Math.ceil(lo / st) * st; v <= hi + 1e-9; v += st) o.push(v); return o; }
+// curva cúbica monótona (Fritsch–Carlson): suave, pasa por cada punto y no se pasa de largo entre ellos
+function smooth(pts) {
+  const n = pts.length; if (!n) return ""; const f = v => v.toFixed(1);
+  if (n < 3) return pts.map((p, k) => (k ? "L" : "M") + f(p[0]) + "," + f(p[1])).join("");
+  const dx = [], sl = [], t = new Array(n);
+  for (let k = 0; k < n - 1; k++) { dx[k] = pts[k + 1][0] - pts[k][0]; sl[k] = (pts[k + 1][1] - pts[k][1]) / dx[k]; }
+  t[0] = sl[0]; t[n - 1] = sl[n - 2];
+  for (let k = 1; k < n - 1; k++) t[k] = sl[k - 1] * sl[k] <= 0 ? 0 : 3 * (dx[k - 1] + dx[k]) / ((2 * dx[k] + dx[k - 1]) / sl[k - 1] + (dx[k] + 2 * dx[k - 1]) / sl[k]);
+  let d = "M" + f(pts[0][0]) + "," + f(pts[0][1]);
+  for (let k = 0; k < n - 1; k++) { const h = dx[k] / 3; d += `C${f(pts[k][0] + h)},${f(pts[k][1] + h * t[k])} ${f(pts[k + 1][0] - h)},${f(pts[k + 1][1] - h * t[k + 1])} ${f(pts[k + 1][0])},${f(pts[k + 1][1])}`; }
+  return d;
+}
 function spread(items, gap, lo, hi) { items.sort((a, b) => a.y - b.y); items.forEach((it, k) => it.ly = Math.max(it.y, k ? items[k - 1].ly + gap : lo)); for (let k = items.length - 1; k >= 0; k--) { const cap = k === items.length - 1 ? hi : items[k + 1].ly - gap; if (items[k].ly > cap) items[k].ly = cap; } return items; }
 
 // ---------- tooltip ----------
@@ -604,7 +616,7 @@ function renderPace() {
   (W < 520 ? SEGS : SEGX).forEach((l, k) => { el("text", { x: x(k), y: H - m.b + 22, "text-anchor": "middle", class: "lbl", text: l }, svg); const [u, dn] = gainLoss(k * 5, k * 5 + 5);
     if (W < 620) { el("text", { x: x(k), y: H - m.b + 40, "text-anchor": "middle", text: `+${Math.round(u)} m` }, svg); el("text", { x: x(k), y: H - m.b + 56, "text-anchor": "middle", text: `−${Math.round(dn)} m` }, svg); }
     else el("text", { x: x(k), y: H - m.b + 40, "text-anchor": "middle", text: `+${Math.round(u)} m / −${Math.round(dn)} m` }, svg); });
-  const line = (v, c) => el("path", { d: v.map((p, k) => (k ? "L" : "M") + x(k) + "," + y(p)).join(""), style: `fill:none;stroke:${c};stroke-width:2;stroke-linejoin:round;stroke-linecap:round` }, svg);
+  const line = (v, c) => el("path", { d: smooth(v.map((p, k) => [x(k), y(p)])), style: `fill:none;stroke:${c};stroke-width:2;stroke-linejoin:round;stroke-linecap:round` }, svg);
   refs.forEach(r => line(r.v, "var(--ink-3)"));
   series.forEach(s => { line(s.v, col(s.r)); s.v.forEach((p, k) => el("circle", { cx: x(k), cy: y(p), r: 4, style: `fill:${col(s.r)};stroke:var(--bg);stroke-width:2` }, svg)); });
   spread([...refs.map(r => ({ y: y(r.v[3]), t: r.t })), ...series.map(s => ({ y: y(s.v[3]), t: first(s.r.i), who: 1 }))], 15, m.t, H - m.b)
@@ -649,7 +661,7 @@ function renderGains() {
     const [u, dn] = gainLoss((k + 1) * 5, (k + 2) * 5);
     if (narrow) { el("text", { x: x(k), y: H - m.b + 40, "text-anchor": "middle", text: `+${Math.round(u)} m` }, svg); el("text", { x: x(k), y: H - m.b + 56, "text-anchor": "middle", text: `−${Math.round(dn)} m` }, svg); }
     else el("text", { x: x(k), y: H - m.b + 40, "text-anchor": "middle", text: `+${Math.round(u)} m / −${Math.round(dn)} m` }, svg); });
-  const line = (v, c) => { let d = "", pen = false; v.forEach((p, k) => { if (p == null) { pen = false; return; } d += (pen ? "L" : "M") + x(k) + "," + y(p); pen = true; }); el("path", { d, style: `fill:none;stroke:${c};stroke-width:2;stroke-linejoin:round;stroke-linecap:round` }, svg); };
+  const line = (v, c) => { const runs = [[]]; v.forEach((p, k) => p == null ? runs.push([]) : runs[runs.length - 1].push([x(k), y(p)])); const d = runs.map(smooth).join(""); el("path", { d, style: `fill:none;stroke:${c};stroke-width:2;stroke-linejoin:round;stroke-linecap:round` }, svg); };
   refs.forEach(r => line(r.v, "var(--ink-3)"));
   series.forEach(s => { line(s.v, col(s.r)); s.v.forEach((p, k) => p != null && el("circle", { cx: x(k), cy: y(p), r: 4, style: `fill:${col(s.r)};stroke:var(--bg);stroke-width:2` }, svg)); });
   const refEnds = refs.length > 1 ? [{ y: y(refs.reduce((a, r) => a + r.v[2], 0) / refs.length), t: narrow ? "Medianas" : "Medianas cajones" }] : refs.map(r => ({ y: y(r.v[2]), t: r.t }));
@@ -665,7 +677,7 @@ function renderGains() {
 
 // ---------- distribución ----------
 function renderDist() {
-  const host = $("dist"), W = widthOf(host), m = { l: 40, r: 8, t: 8, b: 34 };
+  const host = $("dist"), W = widthOf(host), m = { l: 40, r: 20, t: 8, b: 34 };
   const cajs = refMode === "caj" && sel.length ? [...new Set(sel.map(r => CAJ[r.i]))].sort((a, b) => a - b) : [];
   const ts = (cajs.length ? order.filter(i => cajs.includes(CAJ[i])) : order).map(i => C.t[i]), B = cajs.length ? 120 : 60;
   const lo = Math.floor(Math.min(ts[0], ...sel.filter(r => valid(r.i)).map(r => C.t[r.i])) / 600) * 600, hi = Math.ceil(Math.max(ts[Math.floor(ts.length * .999)], ...sel.filter(r => valid(r.i)).map(r => C.t[r.i])) / 600) * 600, nb = Math.ceil((hi - lo) / B), cnt = new Array(nb).fill(0);
@@ -678,7 +690,7 @@ function renderDist() {
   niceTicks(0, ymax, 4).forEach(v => { el("line", { x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), class: "grid" }, svg); el("text", { x: m.l - 6, y: y(v) + 4, "text-anchor": "end", text: n0(v) }, svg); });
   stepTicks(lo, hi, [900, 1800, 3600], W < 520 ? 4 : 7).forEach(t => el("text", { x: x(t), y: Hh - m.b + 20, "text-anchor": "middle", text: hm(t) }, svg));
   const pts = cnt.map((c, b) => [x(lo + (b + .5) * B), y(c)]);
-  el("path", { d: pts.map((p, k) => (k ? "L" : "M") + p[0].toFixed(1) + "," + p[1].toFixed(1)).join("") + `L${pts[pts.length - 1][0]},${y(0)}L${pts[0][0]},${y(0)}Z`, style: "fill:color-mix(in srgb, var(--ink) 14%, transparent)" }, svg);
+  el("path", { d: smooth(pts) + `L${pts[pts.length - 1][0]},${y(0)}L${pts[0][0]},${y(0)}Z`, style: "fill:color-mix(in srgb, var(--ink) 14%, transparent)" }, svg);
   el("line", { x1: m.l, x2: W - m.r, y1: y(0), y2: y(0), class: "base" }, svg);
   showing.forEach((r, k) => {
     const xs = x(Math.min(hi, C.t[r.i])), ly = m.t + 12 + k * 17, right = xs < W - 150;
