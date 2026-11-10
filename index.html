@@ -253,6 +253,13 @@ footer button { border: 0; background: none; padding: 0; text-decoration: underl
     <div class="keys" id="gain-keys"></div>
   </section>
 
+  <section aria-labelledby="h-fade" id="fade-sec">
+    <h2 id="h-fade">Cuánto más lenta fue la segunda mitad</h2>
+    <p class="lead" id="fade-lead"></p>
+    <div class="chart" id="fade"></div>
+    <div class="keys" id="fade-keys"></div>
+  </section>
+
   <section aria-labelledby="h-table" id="table-sec">
     <h2 id="h-table">Tiempos de paso</h2>
     <p class="lead">En negrita, el mejor de cada fila. Los puestos de los km 5, 10 y 15 se cuentan entre quienes tienen ese paso registrado. El cronometraje solo mide los km 5, 10 y 15: el paso por los altos es una estimación que supone ritmo constante dentro de cada tramo.</p>
@@ -482,10 +489,10 @@ function pick(i) { if (sel.some(r => r.i === i)) return; add(i); q.value = ""; m
 // ---------- render ----------
 function render(resetClock) {
   writeHash();
-  $("table-sec").hidden = $("climb-sec").hidden = $("gain-sec").hidden = $("refbar").hidden = !sel.length;
+  $("table-sec").hidden = $("climb-sec").hidden = $("gain-sec").hidden = $("fade-sec").hidden = $("refbar").hidden = !sel.length;
   const ref = refRunner();
   if (resetClock && ref) T = C.t[ref.i];
-  renderRoad(); renderClimbs(); renderGains(); renderTable(); renderPace(); renderDist(); renderAb();
+  renderRoad(); renderClimbs(); renderGains(); renderFade(); renderTable(); renderPace(); renderDist(); renderAb();
 }
 
 // ---------- la carretera ----------
@@ -646,7 +653,7 @@ function renderPace() {
     hover(hit, () => `<div class="t">${SEGX[k]} · +${Math.round(gainLoss(k * 5, k * 5 + 5)[0])} m</div>` + series.map(s => row(first(s.r.i), f(s.v[k]), col(s.r))).join("") + refs.map(r => row(r.t, f(r.v[k]), "var(--ink-3)")).join(""));
   }
 }
-document.querySelectorAll("#ref-mode button").forEach(b => b.onclick = () => { refMode = b.dataset.v; document.querySelectorAll("#ref-mode button").forEach(x => x.setAttribute("aria-pressed", x === b)); renderClimbs(); renderGains(); renderTable(); renderPace(); renderDist(); renderAb(); });
+document.querySelectorAll("#ref-mode button").forEach(b => b.onclick = () => { refMode = b.dataset.v; document.querySelectorAll("#ref-mode button").forEach(x => x.setAttribute("aria-pressed", x === b)); renderClimbs(); renderGains(); renderFade(); renderTable(); renderPace(); renderDist(); renderAb(); });
 document.querySelectorAll("#climb-mode button").forEach(b => b.onclick = () => { climbMode = b.dataset.v; document.querySelectorAll("#climb-mode button").forEach(x => x.setAttribute("aria-pressed", x === b)); renderClimbs(); });
 document.querySelectorAll("#pace-mode button").forEach(b => b.onclick = () => { paceMode = b.dataset.v; document.querySelectorAll("#pace-mode button").forEach(x => x.setAttribute("aria-pressed", x === b)); renderPace(); });
 
@@ -690,6 +697,50 @@ function renderGains() {
     const hit = el("rect", { x: x(k) - (W - m.l - m.r) / 6, y: m.t, width: (W - m.l - m.r) / 3, height: H - m.t - m.b, fill: "transparent" }, svg);
     hover(hit, () => `<div class="t">${GX[k]}${refMode === "caj" ? " · dentro de su cajón" : ""}</div>` + series.map(s => row(first(s.r.i), f(s.v[k]) + " puestos", col(s.r))).join("") + refs.map(r => row(r.t, f(r.v[k]), "var(--ink-3)")).join(""));
   }
+}
+
+// ---------- segunda mitad frente a la primera ----------
+const fadeOf = i => valid(i) && C.t10[i] ? (C.t[i] - C.t10[i]) / C.t10[i] - 1 : null;   // km 10-meta frente a 0-10
+function renderFade() {
+  const host = $("fade"); if (!sel.length) { host.innerHTML = ""; return; }
+  const cajs = refMode === "caj" ? [...new Set(sel.map(r => CAJ[r.i]))].sort((a, b) => a - b) : [];
+  const pop = (cajs.length ? order.filter(i => cajs.includes(CAJ[i])) : order).map(fadeOf).filter(v => v != null);
+  const n = pop.length, mean = pop.reduce((a, v) => a + v, 0) / n, sd = Math.sqrt(pop.reduce((a, v) => a + (v - mean) ** 2, 0) / n), med = median(pop);
+  const lo = -.10, hi = .30, B = .005, nb = Math.round((hi - lo) / B), cnt = new Array(nb).fill(0);
+  for (const v of pop) { const b = Math.floor((Math.min(Math.max(v, lo), hi - 1e-9) - lo) / B); cnt[b]++; }
+  const W = widthOf(host), narrow = W < 620, items = sel.map(r => ({ r, v: fadeOf(r.i) })).filter(o => o.v != null).sort((a, b) => a.v - b.v);
+  const m = { l: 44, r: 16, t: 14 + items.length * 17, b: 34 }, H = 260 + items.length * 17, svg = svgIn(host, W, H);
+  const gauss = v => n * B / (sd * Math.sqrt(2 * Math.PI)) * Math.exp(-((v - mean) ** 2) / (2 * sd * sd));
+  const ymax = Math.max(...cnt, gauss(mean)) * 1.08;
+  const x = v => m.l + (v - lo) / (hi - lo) * (W - m.l - m.r), y = c => H - m.b - c / ymax * (H - m.t - m.b);
+  niceTicks(0, ymax, 4).forEach(v => { el("line", { x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), class: "grid" }, svg); el("text", { x: m.l - 6, y: y(v) + 4, "text-anchor": "end", text: n0(v) }, svg); });
+  [-.10, -.05, 0, .05, .10, .15, .20, .25, .30].filter((v, k) => !narrow || k % 2 === 0).forEach(v => el("text", { x: x(v), y: H - m.b + 18, "text-anchor": "middle", text: (v > 0 ? "+" : v < 0 ? "−" : "") + Math.round(Math.abs(v) * 100) + " %" }, svg));
+  el("text", { x: W - m.r, y: H - 2, "text-anchor": "end", text: "2ª mitad más lenta →" }, svg);
+  const pts = cnt.map((c, b) => [x(lo + (b + .5) * B), y(c)]);
+  el("path", { d: smooth(pts) + `L${pts[pts.length - 1][0]},${y(0)}L${pts[0][0]},${y(0)}Z`, style: "fill:color-mix(in srgb, var(--ink) 14%, transparent)" }, svg);
+  const gp = []; for (let v = lo; v <= hi + 1e-9; v += .0025) gp.push([x(v), y(gauss(v))]);
+  el("path", { d: smooth(gp), style: "fill:none;stroke:var(--ink-2);stroke-width:1.5" }, svg);
+  el("line", { x1: m.l, x2: W - m.r, y1: y(0), y2: y(0), class: "base" }, svg);
+  el("line", { x1: x(0), x2: x(0), y1: m.t, y2: y(0), style: "stroke:var(--ink-3);stroke-width:1" }, svg);
+  el("line", { x1: x(med), x2: x(med), y1: m.t, y2: y(0), style: "stroke:var(--ink-3);stroke-width:2" }, svg);
+  el("text", { x: x(med) + 5, y: m.t + 10, text: `mediana +${(med * 100).toFixed(1).replace(".", ",")} %` }, svg);
+  items.forEach((o, k) => {
+    const lab = `${first(o.r.i)} ${o.v >= 0 ? "+" : "−"}${(Math.abs(o.v) * 100).toFixed(1).replace(".", ",")} %`;
+    const xs = x(Math.min(Math.max(o.v, lo), hi)), ly = 12 + k * 17, right = xs + 8 + lab.length * 7.2 < W;
+    el("line", { x1: xs, x2: xs, y1: ly + 4, y2: y(0), style: `stroke:${col(o.r)};stroke-width:2` }, svg);
+    el("text", { x: right ? xs + 6 : xs - 6, y: ly, "text-anchor": right ? "start" : "end", class: "who", text: lab }, svg);
+  });
+  const neg = pop.filter(v => v < 0).length / n, big = pop.filter(v => v >= .10).length / n;
+  $("fade-lead").textContent = `Tiempo del km 10 a meta frente al de los primeros 10 km, para ${cajs.length ? `los ${n0(n)} de ${cajs.length > 1 ? "los cajones " + cajs.join(", ") : "el cajón " + cajs[0]}` : `los ${n0(n)} que llegaron`}. Solo el ${pct(neg)} hizo la segunda mitad más rápida (izquierda del 0); el ${pct(big)} la hizo un 10 % o más lenta. La curva fina es la campana de Gauss con la misma media (+${(mean * 100).toFixed(1).replace(".", ",")} %) y desviación (${(sd * 100).toFixed(1).replace(".", ",")} puntos): la real tiene la cola derecha más larga, la de quienes pincharon.`;
+  $("fade-keys").innerHTML = items.map(o => `<span><i style="background:${col(o.r)}"></i>${esc(title(C.n[o.r.i]))}: ${o.v >= 0 ? "+" : "−"}${(Math.abs(o.v) * 100).toFixed(1).replace(".", ",")} %, cayó más que el ${pct(pop.filter(v => v < o.v).length / n)}</span>`).join("") + `<span><i style="background:var(--ink-2)"></i>Gauss ajustada</span>`;
+  const cross = el("line", { y1: m.t, y2: y(0), style: "stroke:var(--ink-3);stroke-width:1;display:none" }, svg);
+  const hit = el("rect", { x: m.l, y: m.t, width: W - m.l - m.r, height: y(0) - m.t, fill: "transparent" }, svg);
+  hover(hit, ev => {
+    const r = svg.getBoundingClientRect(), px = (ev.clientX - r.left) * W / r.width, b = Math.floor((px - m.l) / (W - m.l - m.r) * nb); if (b < 0 || b >= nb) return null;
+    const a = lo + b * B; cross.setAttribute("x1", x(a + B / 2)); cross.setAttribute("x2", x(a + B / 2)); cross.style.display = "";
+    const f = v => (v >= 0 ? "+" : "−") + (Math.abs(v) * 100).toFixed(1).replace(".", ",") + " %";
+    return `<div class="t">De ${f(a)} a ${f(a + B)}</div>` + row("Corredores", n0(cnt[b])) + row("Según la Gauss", n0(gauss(a + B / 2)));
+  }, () => cross.style.display = "none");
 }
 
 // ---------- retirados por tramo ----------
