@@ -66,7 +66,7 @@ def main():
         return lst.index(v)
     for c in CAT_ORDER:
         code(cats, c)
-    cols = {k: [] for k in ["d", "n", "s", "c", "g", "o", "p", "a", "t", "t5", "t10", "t15", "st", "pos"]}
+    cols = {k: [] for k in ["d", "n", "s", "c", "g", "o", "p", "a", "t", "t5", "t10", "t15", "st", "pos", "ab"]}
     for r in rows:
         t = sec(r["tiempo"])
         st = sec(r["hora_salida"])
@@ -90,9 +90,10 @@ def main():
         cols["p"].append(code(provs, prov))
         cols["a"].append(code(ccaas, ccaa))
         cols["t"].append(t if valid else 0)
-        for k in ("t5", "t10", "t15"):
+        for k in ("t5", "t10", "t15"):   # los retirados conservan los pasos que registraron
             v = sec(r[k])
-            cols[k].append(v if valid and 0 < v < t else 0)
+            cols[k].append(v if (valid and 0 < v < t) or (not valid and v > 0) else 0)
+        cols["ab"].append(1 if not valid and st > 0 else 0)   # cruzó la salida y no se clasificó
         cols["st"].append(st)
         cols["pos"].append(int(r["pos"]) if r["pos"] not in ("", "0") else 0)
     # Cajón desde el que salió cada corredor: el de su dorsal, salvo que cruzara la alfombra fuera de la
